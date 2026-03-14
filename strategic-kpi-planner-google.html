@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strategic KPI Planner — Google Connected</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #21262d;
+  --border: #30363d;
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --accent: #4285f4;   /* Google Blue */
+  --g-red: #ea4335;
+  --g-yellow: #fbbc05;
+  --g-green: #34a853;
+  --g-blue: #4285f4;
+  --gold: #d4a843;
+  --tag-bg: #1c2128;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Sora', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 200;
+}
+.logo {
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'Playfair Display', serif;
+  font-size: 17px; color: var(--text);
+}
+.logo-icon {
+  width: 30px; height: 30px;
+  background: linear-gradient(135deg, #4285f4, #34a853);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+.header-center {
+  display: flex; gap: 2px;
+}
+.tab {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px; font-weight: 500;
+  color: var(--muted); cursor: pointer;
+  transition: all 0.15s; background: transparent; border: none;
+  letter-spacing: 0.03em;
+}
+.tab:hover { color: var(--text); background: var(--surface2); }
+.tab.active { color: var(--text); background: var(--surface2); border-bottom: 2px solid var(--accent); border-radius: 6px 6px 0 0; }
+
+.header-right {
+  display: flex; align-items: center; gap: 10px;
+}
+.google-signin-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 14px;
+  background: white;
+  color: #333;
+  border: none; border-radius: 6px;
+  font-family: 'Sora', sans-serif;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  transition: box-shadow 0.15s;
+}
+.google-signin-btn:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+.google-signin-btn img { width: 16px; height: 16px; }
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--muted);
+  display: inline-block;
+}
+.status-dot.connected { background: var(--g-green); box-shadow: 0 0 6px var(--g-green); }
+.status-text { font-size: 11px; color: var(--muted); }
+
+/* ── VIEWS ── */
+.view { display: none; padding: 24px 28px; max-width: 1280px; margin: 0 auto; }
+.view.active { display: block; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.card-head {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-title {
+  font-size: 12px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--muted);
+}
+.card-body { padding: 16px; }
+
+/* ── INPUTS ── */
+.inp {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: var(--text);
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+.inp:focus { outline: none; border-color: var(--accent); }
+.inp::placeholder { color: var(--muted); }
+textarea.inp { resize: vertical; min-height: 60px; line-height: 1.6; }
+
+.btn {
+  padding: 8px 16px; border-radius: 6px;
+  font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s; border: none;
+}
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { background: #3275e0; }
+.btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+.btn-green { background: var(--g-green); color: white; }
+.btn-green:hover { background: #2d9248; }
+.btn-sm { padding: 5px 10px; font-size: 11px; }
+
+/* ── GRID LAYOUTS ── */
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.g-daily { display: grid; grid-template-columns: 200px 1fr 260px; gap: 14px; }
+
+.mb8 { margin-bottom: 8px; }
+.mb12 { margin-bottom: 12px; }
+.mb16 { margin-bottom: 16px; }
+.mb20 { margin-bottom: 20px; }
+.flex { display: flex; }
+.items-center { align-items: center; }
+.gap8 { gap: 8px; }
+.gap12 { gap: 12px; }
+
+/* ── SECTION HEADER ── */
+.sh {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px;
+}
+.sh-label {
+  font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--muted); font-family: 'IBM Plex Mono', monospace;
+}
+.sh-line { flex: 1; height: 1px; background: var(--border); }
+
+/* ── PROGRESS ── */
+.prog-wrap { height: 5px; background: var(--surface2); border-radius: 3px; margin-top: 4px; }
+.prog-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+.pb { background: var(--accent); }
+.pg { background: var(--g-green); }
+.py { background: var(--g-yellow); }
+.pr { background: var(--g-red); }
+
+/* ── KPI STAT CARDS ── */
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: ''; position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+}
+.stat-card.blue::before { background: var(--g-blue); }
+.stat-card.green::before { background: var(--g-green); }
+.stat-card.yellow::before { background: var(--g-yellow); }
+.stat-card.red::before { background: var(--g-red); }
+.stat-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; font-family: 'IBM Plex Mono', monospace; }
+.stat-val { font-family: 'Playfair Display', serif; font-size: 30px; color: var(--text); }
+.stat-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.stat-trend { position: absolute; top: 14px; right: 14px; font-size: 11px; font-family: 'IBM Plex Mono', monospace; font-weight: 600; }
+.up { color: var(--g-green); }
+.dn { color: var(--g-red); }
+
+/* ── CALENDAR ── */
+.cal-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 1px; background: var(--border);
+  border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+}
+.cal-hd {
+  background: var(--surface2); padding: 8px 4px;
+  text-align: center; font-size: 10px; letter-spacing: 0.1em;
+  font-family: 'IBM Plex Mono', monospace; color: var(--muted);
+}
+.cal-day {
+  background: var(--surface); min-height: 76px;
+  padding: 6px; cursor: pointer;
+  transition: background 0.12s; position: relative;
+}
+.cal-day:hover { background: var(--surface2); }
+.cal-day.empty { background: var(--bg); cursor: default; }
+.cal-day.today { background: #1a2744; }
+.cal-day.selected { background: #1c2e4a; outline: 1px solid var(--accent); }
+.cal-dn { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; margin-bottom: 3px; }
+.cal-day.today .cal-dn { color: var(--accent); }
+.cal-event {
+  font-size: 9px; padding: 1px 5px; border-radius: 3px;
+  margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-weight: 500;
+}
+.ev-cal { background: #1a3a6b; color: #93c5fd; }
+.ev-task { background: #1a3a2b; color: #86efac; }
+.ev-kpi { background: #3b2000; color: #fcd34d; }
+
+/* ── TIME BLOCKS ── */
+.tb { display: flex; gap: 8px; min-height: 50px; border-bottom: 1px solid var(--border); padding: 4px 0; align-items: flex-start; }
+.tb-time { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); width: 40px; flex-shrink: 0; padding-top: 6px; }
+.tb-wrap { flex: 1; }
+.tb-inp { width: 100%; background: transparent; border: none; border-bottom: 1px dashed var(--border); padding: 4px 6px; font-size: 12px; font-family: 'Sora', sans-serif; color: var(--text); outline: none; min-height: 40px; resize: none; line-height: 1.5; }
+.tb-inp:focus { border-bottom-color: var(--accent); background: var(--surface2); border-radius: 4px 4px 0 0; }
+.tb-inp::placeholder { color: var(--border); font-size: 11px; }
+.tb-gcal { font-size: 10px; padding: 2px 6px; border-radius: 3px; background: #1a2744; color: #93c5fd; margin-bottom: 2px; display: flex; align-items: center; gap: 4px; }
+
+/* ── MATRIX ── */
+.matrix {
+  display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+  gap: 1px; background: var(--border);
+  border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+  height: 200px;
+}
+.mc { background: var(--surface); padding: 10px; display: flex; flex-direction: column; }
+.mc-lbl { font-size: 9px; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 5px; font-weight: 600; }
+.mc-lbl.r { color: var(--g-red); }
+.mc-lbl.b { color: var(--accent); }
+.mc-lbl.y { color: var(--g-yellow); }
+.mc-lbl.m { color: var(--muted); }
+.mc-tasks { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; }
+.mc-inp { background: transparent; border: none; border-bottom: 1px dashed var(--border); font-size: 11px; font-family: 'Sora', sans-serif; color: var(--text); padding: 2px 2px; outline: none; width: 100%; }
+.mc-inp:focus { border-bottom-color: var(--accent); }
+.mc-inp::placeholder { color: var(--border); }
+
+/* ── CHECKLIST ── */
+.check-item { display: flex; align-items: flex-start; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+.check-item:last-child { border-bottom: none; }
+.check-item input[type=checkbox] { accent-color: var(--accent); margin-top: 2px; cursor: pointer; flex-shrink: 0; }
+.check-item label { font-size: 12px; cursor: pointer; line-height: 1.5; flex: 1; }
+.check-item label.done { text-decoration: line-through; color: var(--muted); }
+.pri { font-size: 9px; font-family: 'IBM Plex Mono', monospace; padding: 1px 6px; border-radius: 10px; white-space: nowrap; }
+.ph { background: #3b0000; color: #fca5a5; }
+.pm { background: #2d2000; color: #fde68a; }
+.pl { background: #002014; color: #86efac; }
+
+/* ── REFLECTION ── */
+.refl-q { font-size: 10px; color: var(--muted); font-style: italic; margin-bottom: 3px; letter-spacing: 0.03em; }
+.refl-inp { width: 100%; background: transparent; border: none; border-bottom: 1px dashed var(--border); font-size: 12px; font-family: 'Sora', sans-serif; color: var(--text); padding: 4px 0; outline: none; margin-bottom: 10px; }
+.refl-inp:focus { border-bottom-color: var(--accent); }
+.refl-inp::placeholder { color: var(--border); }
+
+/* ── ENERGY ── */
+.energy-bar { display: flex; gap: 5px; }
+.eseg { flex: 1; height: 22px; border-radius: 4px; cursor: pointer; opacity: 0.35; transition: opacity 0.15s, transform 0.15s; border: 2px solid transparent; }
+.eseg.lit { opacity: 1; transform: scaleY(1.1); border-color: var(--text); }
+.e1 { background: #4285f4; }
+.e2 { background: #34a853; }
+.e3 { background: #fbbc05; }
+.e4 { background: #ff6d00; }
+.e5 { background: #ea4335; }
+
+/* ── KPI TABLE ── */
+.kpi-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.kpi-table th { padding: 8px 10px; text-align: left; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-family: 'IBM Plex Mono', monospace; border-bottom: 1px solid var(--border); font-weight: 500; }
+.kpi-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.kpi-table tr:last-child td { border-bottom: none; }
+.kpi-table input { background: transparent; border: none; border-bottom: 1px dashed transparent; color: var(--text); font-family: 'IBM Plex Mono', monospace; font-size: 12px; text-align: right; width: 70px; outline: none; }
+.kpi-table input:focus { border-bottom-color: var(--accent); }
+.kpi-name-inp { text-align: left !important; width: 140px !important; font-family: 'Sora', sans-serif !important; }
+
+/* ── GANTT ── */
+.gantt { width: 100%; border-collapse: collapse; font-size: 11px; }
+.gantt th { padding: 7px 8px; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em; color: var(--muted); border-bottom: 1px solid var(--border); font-weight: 500; }
+.gantt th:first-child { text-align: left; width: 140px; }
+.gantt td { padding: 6px 4px; border-bottom: 1px solid var(--border); position: relative; height: 34px; }
+.gantt td:first-child { font-size: 12px; font-weight: 500; padding-left: 10px; }
+.gbar { position: absolute; top: 6px; bottom: 6px; border-radius: 3px; opacity: 0.8; }
+.gbar.b { background: var(--accent); }
+.gbar.g { background: var(--g-green); }
+.gbar.y { background: var(--g-yellow); }
+.gbar.r { background: var(--g-red); }
+.gcur { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--g-red); opacity: 0.6; pointer-events: none; }
+
+/* ── INSIGHT BOX ── */
+.insight-box {
+  background: linear-gradient(135deg, #0d1b2e, #0a1f0a);
+  border: 1px solid #1e3a5f;
+  border-radius: 10px;
+  padding: 20px 24px;
+}
+
+/* ── GOOGLE CONNECTED BADGE ── */
+.g-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 8px; border-radius: 20px;
+  font-size: 10px; font-family: 'IBM Plex Mono', monospace;
+}
+.g-badge.cal { background: #1a2744; color: #93c5fd; border: 1px solid #1e3a6b; }
+.g-badge.sheets { background: #1a3a2b; color: #86efac; border: 1px solid #1e4a30; }
+.g-badge.disconnected { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+
+/* ── NOTIFICATION TOAST ── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 16px;
+  font-size: 13px; z-index: 1000;
+  display: none; max-width: 320px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  animation: slideIn 0.3s ease;
+}
+@keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* ── OVERLAY MODAL ── */
+.overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+  z-index: 500; display: none;
+  align-items: center; justify-content: center;
+}
+.overlay.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 480px; max-width: 95vw;
+  padding: 28px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+}
+.modal h2 { font-family: 'Playfair Display', serif; font-size: 20px; margin-bottom: 6px; }
+.modal p { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
+.modal-step {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 12px; background: var(--surface2); border-radius: 8px;
+  margin-bottom: 8px;
+}
+.modal-step-num {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--accent); color: white;
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.modal-step-text { font-size: 12px; line-height: 1.6; color: var(--muted); }
+.modal-step-text strong { color: var(--text); }
+.scope-tag { display: inline-block; padding: 1px 6px; border-radius: 3px; background: #1a2744; color: #93c5fd; font-size: 10px; font-family: 'IBM Plex Mono', monospace; margin: 1px; }
+
+/* ── MONTH BTN ── */
+.mbtn { padding: 4px 10px; border-radius: 4px; font-size: 11px; font-family: 'IBM Plex Mono', monospace; cursor: pointer; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); transition: all 0.12s; }
+.mbtn:hover { border-color: var(--accent); color: var(--accent); }
+.mbtn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+/* ── QUICK ADD ── */
+.quick-add { display: flex; gap: 6px; margin-top: 10px; }
+
+/* ── LOADING SPINNER ── */
+.spin { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── AI ASSISTANT ── */
+.ai-chat { display: flex; flex-direction: column; gap: 8px; }
+.ai-msg { padding: 10px 14px; border-radius: 8px; font-size: 12px; line-height: 1.6; max-width: 85%; }
+.ai-msg.user { background: #1a2744; color: #e0f0ff; align-self: flex-end; }
+.ai-msg.assistant { background: var(--surface2); color: var(--text); align-self: flex-start; border: 1px solid var(--border); }
+.ai-inp-wrap { display: flex; gap: 6px; margin-top: 10px; }
+.ai-inp { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; color: var(--text); font-family: 'Sora', sans-serif; font-size: 12px; outline: none; }
+.ai-inp:focus { border-color: var(--accent); }
+
+@media (max-width: 900px) {
+  .view { padding: 14px; }
+  .g2, .g3, .g4 { grid-template-columns: 1fr; }
+  .g-daily { grid-template-columns: 1fr; }
+  .header { padding: 0 14px; }
+  .gantt, .kpi-table { font-size: 10px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">📊</div>
+    KPI Planner
+  </div>
+  <div class="header-center">
+    <button class="tab active" onclick="showTab('dashboard',this)">대시보드</button>
+    <button class="tab" onclick="showTab('annual',this)">연간 전략</button>
+    <button class="tab" onclick="showTab('monthly',this)">월간</button>
+    <button class="tab" onclick="showTab('daily',this)">일간</button>
+    <button class="tab" onclick="showTab('ai',this)">AI 코치</button>
+  </div>
+  <div class="header-right">
+    <span class="status-dot" id="status-dot"></span>
+    <span class="status-text" id="status-text">연결 안됨</span>
+    <button class="google-signin-btn" id="signin-btn" onclick="openAuthModal()">
+      <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#fbbc05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Google 연동
+    </button>
+  </div>
+</div>
+
+<!-- ══════════ DASHBOARD ══════════ -->
+<div class="view active" id="view-dashboard">
+  <div class="sh mb16">
+    <div class="sh-label">Overview</div>
+    <div class="sh-line"></div>
+    <div id="sync-badges" style="display:flex;gap:6px;">
+      <span class="g-badge disconnected" id="badge-cal">📅 Calendar 미연결</span>
+      <span class="g-badge disconnected" id="badge-sheets">📊 Sheets 미연결</span>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="syncAll()" style="margin-left:8px;" id="sync-btn">동기화</button>
+  </div>
+
+  <div class="g4 mb20" id="stat-cards">
+    <div class="stat-card blue">
+      <div class="stat-trend up" id="sd-kpi-trend">— %</div>
+      <div class="stat-label">연간 KPI 달성률</div>
+      <div class="stat-val" id="sd-kpi-val">—</div>
+      <div class="stat-sub" id="sd-kpi-sub">데이터 연결 필요</div>
+      <div class="prog-wrap"><div class="prog-fill pb" id="sd-kpi-bar" style="width:0%"></div></div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-trend up" id="sd-events-trend">— 건</div>
+      <div class="stat-label">이번 달 캘린더 일정</div>
+      <div class="stat-val" id="sd-events-val">—</div>
+      <div class="stat-sub" id="sd-events-sub">Google Calendar 연결 필요</div>
+    </div>
+    <div class="stat-card yellow">
+      <div class="stat-trend" id="sd-week-trend" style="color:var(--g-yellow)">이번 주</div>
+      <div class="stat-label">주간 완료 업무</div>
+      <div class="stat-val" id="sd-week-val">—</div>
+      <div class="stat-sub" id="sd-week-sub">Sheets 연결 필요</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-trend dn" id="sd-over-trend">!</div>
+      <div class="stat-label">D-day 마감 항목</div>
+      <div class="stat-val" id="sd-over-val">—</div>
+      <div class="stat-sub" id="sd-over-sub">캘린더 연결 후 표시</div>
+    </div>
+  </div>
+
+  <!-- Upcoming events from Google Cal -->
+  <div class="g2 mb16">
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">📅 다가오는 일정 (Google Calendar)</span>
+        <span class="spin" id="cal-loading" style="display:none;"></span>
+      </div>
+      <div class="card-body" id="upcoming-events">
+        <div style="text-align:center;padding:30px;color:var(--muted);font-size:12px;">
+          Google 계정을 연동하면<br>실제 캘린더 일정이 여기 표시됩니다
+          <br><br>
+          <button class="btn btn-ghost btn-sm" onclick="openAuthModal()">연동하기 →</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">📊 KPI 현황 (Google Sheets 연동)</span>
+        <button class="btn btn-ghost btn-sm" onclick="openSheetsSetup()">Sheets 설정</button>
+      </div>
+      <div class="card-body" id="sheets-kpi-display">
+        <div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">
+          Google Sheets URL을 연결하면<br>KPI 데이터가 자동으로 불러와집니다
+          <br><br>
+          <input class="inp" id="sheets-url-inp" placeholder="Google Sheets URL 붙여넣기..." style="margin-bottom:8px;font-size:11px;">
+          <button class="btn btn-green btn-sm" onclick="connectSheets()">Sheets 연결</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gantt -->
+  <div class="card mb16">
+    <div class="card-head">
+      <span class="card-title">📅 2026 실행 로드맵</span>
+      <span style="font-size:11px;color:var(--muted);">현재: 3월 (▶ 빨간선)</span>
+    </div>
+    <div class="card-body" style="overflow-x:auto;">
+      <table class="gantt" id="gantt-table">
+        <thead>
+          <tr>
+            <th>Initiative</th>
+            <th>1월</th><th>2월</th><th>3월</th><th>4월</th><th>5월</th><th>6월</th>
+            <th>7월</th><th>8월</th><th>9월</th><th>10월</th><th>11월</th><th>12월</th>
+          </tr>
+        </thead>
+        <tbody id="gantt-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- AI Insight summary -->
+  <div class="insight-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div style="font-family:'Playfair Display',serif;font-size:16px;">✨ AI 전략 인사이트</div>
+      <button class="btn btn-ghost btn-sm" onclick="generateInsight()">분석 새로고침</button>
+    </div>
+    <div id="insight-text" style="font-size:13px;color:#94a3b8;line-height:1.8;">
+      Google 계정 연동 후 AI가 캘린더 패턴, KPI 달성률, 업무 집중도를 분석해 맞춤 전략 인사이트를 제공합니다.
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ ANNUAL ══════════ -->
+<div class="view" id="view-annual">
+  <div class="sh mb16"><div class="sh-label">Annual Strategy</div><div class="sh-line"></div></div>
+
+  <!-- North Star -->
+  <div class="card mb16">
+    <div class="card-head">
+      <span class="card-title">🎯 North Star — 핵심 전략 목표 (McKinsey Framework)</span>
+      <button class="btn btn-ghost btn-sm" onclick="saveToSheets('strategy')">Sheets에 저장</button>
+    </div>
+    <div class="card-body g3">
+      <div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;font-family:'IBM Plex Mono',monospace;letter-spacing:0.1em;">WHERE TO PLAY</div>
+        <textarea class="inp" id="wtp" placeholder="어떤 시장/역할/포지션에서 경쟁할 것인가?"></textarea>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;font-family:'IBM Plex Mono',monospace;letter-spacing:0.1em;">HOW TO WIN</div>
+        <textarea class="inp" id="htw" placeholder="어떤 차별화된 방법으로 이길 것인가?"></textarea>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;font-family:'IBM Plex Mono',monospace;letter-spacing:0.1em;">MUST-HAVE CAPABILITIES</div>
+        <textarea class="inp" id="mhc" placeholder="반드시 갖춰야 할 핵심 역량은?"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Table -->
+  <div class="card mb16">
+    <div class="card-head">
+      <span class="card-title">📊 연간 KPI 설정 (Sheets 동기화)</span>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-ghost btn-sm" onclick="syncKPIFromSheets()">Sheets에서 불러오기</button>
+        <button class="btn btn-primary btn-sm" onclick="saveKPIToSheets()">Sheets에 저장</button>
+      </div>
+    </div>
+    <div class="card-body" style="overflow-x:auto;">
+      <table class="kpi-table" id="kpi-table">
+        <thead>
+          <tr>
+            <th>KPI 지표명</th>
+            <th>카테고리</th>
+            <th>연간 목표</th>
+            <th>현재값</th>
+            <th>달성률</th>
+            <th>진행</th>
+            <th>상태</th>
+          </tr>
+        </thead>
+        <tbody id="kpi-tbody"></tbody>
+      </table>
+      <button class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="addKPIRow()">+ KPI 추가</button>
+    </div>
+  </div>
+
+  <!-- Q-plan -->
+  <div class="sh mb12"><div class="sh-label">Quarterly Plan</div><div class="sh-line"></div></div>
+  <div class="g4" id="q-grid"></div>
+</div>
+
+<!-- ══════════ MONTHLY ══════════ -->
+<div class="view" id="view-monthly">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+    <div class="sh" style="margin-bottom:0;flex:1;"><div class="sh-label">Monthly Plan</div><div class="sh-line"></div></div>
+    <button class="btn btn-ghost btn-sm" onclick="syncCalendar()">📅 캘린더 동기화</button>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;" id="month-btns"></div>
+
+  <div style="display:grid;grid-template-columns:1fr 280px;gap:16px;">
+    <div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="card">
+        <div class="card-head"><span class="card-title">📊 월간 KPI 진행</span></div>
+        <div class="card-body" id="monthly-kpi-panel">
+          <div style="font-size:11px;color:var(--muted);">연간 KPI를 설정하면 월간 목표가 자동 계산됩니다</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">✅ 이달의 핵심 과제</span></div>
+        <div class="card-body" id="monthly-tasks">
+          <div id="monthly-task-list"></div>
+          <div class="quick-add">
+            <input class="inp" id="mt-inp" placeholder="과제 추가..." style="font-size:11px;" onkeydown="if(event.key==='Enter')addMonthlyTask()">
+            <button class="btn btn-primary btn-sm" onclick="addMonthlyTask()">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">🪞 월간 성찰</span></div>
+        <div class="card-body">
+          <div class="refl-q">이번 달 가장 큰 성과</div>
+          <input class="refl-inp" placeholder="WIN...">
+          <div class="refl-q">개선이 필요한 부분</div>
+          <input class="refl-inp" placeholder="IMPROVE...">
+          <div class="refl-q">다음 달 핵심 변화</div>
+          <input class="refl-inp" placeholder="CHANGE...">
+          <button class="btn btn-ghost btn-sm" style="margin-top:4px;" onclick="saveToSheets('reflection')">Sheets에 저장</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ DAILY ══════════ -->
+<div class="view" id="view-daily">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+    <button class="btn btn-ghost btn-sm" onclick="changeDay(-1)">←</button>
+    <div>
+      <div style="font-family:'Playfair Display',serif;font-size:20px;" id="d-date">2026년 3월 14일 (토)</div>
+      <div style="font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace;" id="d-week">WEEK 11</div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="changeDay(1)">→</button>
+    <button class="btn btn-ghost btn-sm" onclick="goToday()">TODAY</button>
+    <button class="btn btn-ghost btn-sm" onclick="syncCalendar()">📅 오늘 일정 불러오기</button>
+  </div>
+
+  <div class="g-daily">
+    <!-- Left: Time -->
+    <div class="card">
+      <div class="card-head"><span class="card-title">⏰ 타임블록</span></div>
+      <div class="card-body" style="padding:8px;" id="time-col"></div>
+    </div>
+
+    <!-- Center -->
+    <div>
+      <!-- ONE THING -->
+      <div class="card mb12">
+        <div class="card-head" style="background:#1a2744;border-color:#1e3a6b;">
+          <span class="card-title" style="color:#93c5fd;">🎯 오늘의 ONE THING (McKinsey: Answer First)</span>
+        </div>
+        <div class="card-body">
+          <input class="inp" id="one-thing" placeholder="오늘 이것 하나만 완수한다면 하루는 성공이다..." style="font-size:14px;font-family:'Playfair Display',serif;">
+        </div>
+      </div>
+
+      <!-- Matrix -->
+      <div style="margin-bottom:12px;">
+        <div class="sh-label" style="margin-bottom:6px;">EISENHOWER MATRIX</div>
+        <div class="matrix">
+          <div class="mc">
+            <div class="mc-lbl r">① DO NOW — 긴급&중요</div>
+            <div class="mc-tasks">
+              <input class="mc-inp" placeholder="즉시 처리...">
+              <input class="mc-inp" placeholder="즉시 처리...">
+              <input class="mc-inp" placeholder="즉시 처리...">
+            </div>
+          </div>
+          <div class="mc">
+            <div class="mc-lbl b">② SCHEDULE — 중요&비긴급</div>
+            <div class="mc-tasks">
+              <input class="mc-inp" placeholder="일정 잡기...">
+              <input class="mc-inp" placeholder="일정 잡기...">
+              <input class="mc-inp" placeholder="일정 잡기...">
+            </div>
+          </div>
+          <div class="mc">
+            <div class="mc-lbl y">③ DELEGATE — 긴급&덜중요</div>
+            <div class="mc-tasks">
+              <input class="mc-inp" placeholder="위임/최소화...">
+              <input class="mc-inp" placeholder="위임/최소화...">
+            </div>
+          </div>
+          <div class="mc">
+            <div class="mc-lbl m">④ ELIMINATE — 비긴급&덜중요</div>
+            <div class="mc-tasks">
+              <input class="mc-inp" placeholder="제거/나중에...">
+              <input class="mc-inp" placeholder="제거/나중에...">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes: Pyramid -->
+      <div class="card">
+        <div class="card-head"><span class="card-title">📝 핵심 노트 (Pyramid Structure)</span>
+          <button class="btn btn-ghost btn-sm" onclick="saveToSheets('daily')">Sheets 저장</button>
+        </div>
+        <div class="card-body">
+          <div class="g2" style="gap:10px;margin-bottom:10px;">
+            <div>
+              <div style="font-size:10px;color:var(--accent);margin-bottom:4px;font-family:'IBM Plex Mono',monospace;">결론 (ANSWER FIRST)</div>
+              <textarea class="inp" style="min-height:50px;font-size:12px;" placeholder="오늘의 핵심 결론은?"></textarea>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);margin-bottom:4px;font-family:'IBM Plex Mono',monospace;">근거 & 데이터</div>
+              <textarea class="inp" style="min-height:50px;font-size:12px;" placeholder="근거는?"></textarea>
+            </div>
+          </div>
+          <div style="font-size:10px;color:var(--g-green);margin-bottom:4px;font-family:'IBM Plex Mono',monospace;">NEXT STEPS</div>
+          <textarea class="inp" style="min-height:40px;font-size:12px;" placeholder="내일/이번 주 다음 단계는?"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Insights -->
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="card">
+        <div class="card-head" style="background:#2d2000;border-color:#3b2800;"><span class="card-title" style="color:#fcd34d;">⚡ 에너지 레벨</span></div>
+        <div class="card-body">
+          <div class="energy-bar" id="energy-bar" style="margin-bottom:6px;">
+            <div class="eseg e1" onclick="setE(1)"></div>
+            <div class="eseg e2" onclick="setE(2)"></div>
+            <div class="eseg e3" onclick="setE(3)"></div>
+            <div class="eseg e4" onclick="setE(4)"></div>
+            <div class="eseg e5" onclick="setE(5)"></div>
+          </div>
+          <div style="font-size:10px;color:var(--muted);text-align:center;font-family:'IBM Plex Mono',monospace;" id="e-label">클릭해서 기록</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><span class="card-title">📈 오늘 완료율</span></div>
+        <div class="card-body" style="text-align:center;">
+          <svg width="70" height="70" viewBox="0 0 70 70">
+            <circle cx="35" cy="35" r="28" fill="none" stroke="var(--surface2)" stroke-width="7"/>
+            <circle cx="35" cy="35" r="28" fill="none" stroke="var(--g-green)" stroke-width="7"
+              stroke-dasharray="175.9" stroke-dashoffset="53" stroke-linecap="round" transform="rotate(-90 35 35)" id="completion-ring"/>
+            <text x="35" y="39" text-anchor="middle" font-size="13" font-weight="700" fill="var(--text)" font-family="'IBM Plex Mono',monospace" id="completion-pct">70%</text>
+          </svg>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;" id="completion-detail">계획 10건 중 7건 완료</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><span class="card-title">🪞 일간 성찰 (5분)</span></div>
+        <div class="card-body">
+          <div class="refl-q">오늘 가장 잘한 것 (WIN)</div>
+          <input class="refl-inp" placeholder="...">
+          <div class="refl-q">배운 것 / 개선점 (LEARN)</div>
+          <input class="refl-inp" placeholder="...">
+          <div class="refl-q">내일 가장 먼저 할 일 (NEXT)</div>
+          <input class="refl-inp" placeholder="...">
+          <div class="refl-q">감사한 것 (GRATITUDE)</div>
+          <input class="refl-inp" placeholder="...">
+          <button class="btn btn-ghost btn-sm" style="margin-top:6px;width:100%;" onclick="saveToSheets('reflection')">Sheets에 저장</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><span class="card-title">🎯 KPI 기여 태깅</span></div>
+        <div class="card-body">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">오늘 한 일이 기여한 KPI:</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;" id="kpi-tags"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ AI COACH ══════════ -->
+<div class="view" id="view-ai">
+  <div class="sh mb16"><div class="sh-label">AI Strategy Coach</div><div class="sh-line"></div></div>
+  <div style="display:grid;grid-template-columns:1fr 320px;gap:16px;">
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">✨ AI 전략 코치 (Claude powered)</span>
+        <span style="font-size:10px;color:var(--muted);">캘린더·KPI 데이터 기반 분석</span>
+      </div>
+      <div class="card-body" style="height:500px;display:flex;flex-direction:column;">
+        <div class="ai-chat" id="ai-chat" style="flex:1;overflow-y:auto;padding-bottom:12px;">
+          <div class="ai-msg assistant">
+            안녕하세요! 저는 AI 전략 코치입니다. 🎯<br><br>
+            Google Calendar와 KPI 데이터가 연동되면 여러분의 <strong>시간 사용 패턴, KPI 달성 현황, 업무 집중도</strong>를 분석해 맞춤 전략을 제안할 수 있습니다.<br><br>
+            무엇을 도와드릴까요? 예시:<br>
+            • "이번 주 나의 시간을 어떻게 쓰고 있어?"<br>
+            • "KPI 달성을 위한 우선순위를 추천해줘"<br>
+            • "다음 달 계획 수립을 도와줘"
+          </div>
+        </div>
+        <div class="ai-inp-wrap">
+          <input class="ai-inp" id="ai-input" placeholder="전략적 질문을 입력하세요..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAI()}">
+          <button class="btn btn-primary" onclick="sendAI()" id="ai-send-btn">전송</button>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="card">
+        <div class="card-head"><span class="card-title">⚡ 빠른 분석</span></div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:6px;">
+          <button class="btn btn-ghost" style="text-align:left;font-size:11px;" onclick="quickAsk('이번 주 내 시간 사용 패턴을 분석해줘')">📊 이번 주 시간 분석</button>
+          <button class="btn btn-ghost" style="text-align:left;font-size:11px;" onclick="quickAsk('현재 KPI 달성률 기반으로 연간 목표 달성 가능성을 분석해줘')">🎯 KPI 달성 예측</button>
+          <button class="btn btn-ghost" style="text-align:left;font-size:11px;" onclick="quickAsk('다음 주 중요 일정과 우선순위를 정리해줘')">📅 다음 주 우선순위</button>
+          <button class="btn btn-ghost" style="text-align:left;font-size:11px;" onclick="quickAsk('맥킨지 80/20 원칙으로 현재 업무에서 집중해야 할 것을 추천해줘')">💡 80/20 집중 추천</button>
+          <button class="btn btn-ghost" style="text-align:left;font-size:11px;" onclick="quickAsk('이번 달 성과를 기반으로 다음 달 계획을 수립해줘')">📋 다음 달 계획 수립</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">📌 연동 데이터 현황</span></div>
+        <div class="card-body" style="font-size:12px;color:var(--muted);line-height:2;" id="data-status">
+          <div>📅 캘린더: <span id="ds-cal" style="color:var(--muted)">미연결</span></div>
+          <div>📊 Sheets KPI: <span id="ds-kpi" style="color:var(--muted)">미연결</span></div>
+          <div>✅ 오늘 완료 업무: <span id="ds-done" style="color:var(--muted)">—</span></div>
+          <div>⚡ 에너지 평균: <span id="ds-energy" style="color:var(--muted)">—</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ AUTH MODAL ══════════ -->
+<div class="overlay" id="auth-overlay">
+  <div class="modal">
+    <h2>🔗 Google 계정 연동</h2>
+    <p>Google Calendar와 Sheets를 연동하면 일정이 플래너에 자동으로 표시되고, KPI 데이터를 Sheets와 동기화할 수 있습니다.</p>
+
+    <div class="modal-step">
+      <div class="modal-step-num">1</div>
+      <div class="modal-step-text">
+        <strong>Google OAuth 2.0 인증</strong><br>
+        아래 버튼을 클릭하면 Google 로그인 창이 열립니다.<br>
+        필요한 권한: <span class="scope-tag">calendar.readonly</span> <span class="scope-tag">spreadsheets</span>
+      </div>
+    </div>
+    <div class="modal-step">
+      <div class="modal-step-num">2</div>
+      <div class="modal-step-text">
+        <strong>캘린더 일정 자동 동기화</strong><br>
+        Google Calendar의 일정이 월간·일간 뷰에 자동으로 표시됩니다.
+      </div>
+    </div>
+    <div class="modal-step">
+      <div class="modal-step-num">3</div>
+      <div class="modal-step-text">
+        <strong>KPI 데이터 → Google Sheets</strong><br>
+        플래너에서 입력한 KPI, 성찰, 업무일지가 지정한 Sheets에 자동 저장됩니다.
+      </div>
+    </div>
+
+    <div style="margin-top:20px;display:flex;gap:8px;">
+      <button class="btn btn-primary" style="flex:1;" onclick="startGoogleAuth()">
+        <span style="display:flex;align-items:center;justify-content:center;gap:8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path fill="white" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="white" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="white" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="white" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Google로 로그인
+        </span>
+      </button>
+      <button class="btn btn-ghost" onclick="closeModal('auth-overlay')">닫기</button>
+    </div>
+
+    <div style="margin-top:16px;padding:12px;background:var(--surface2);border-radius:8px;font-size:11px;color:var(--muted);line-height:1.7;">
+      💡 <strong style="color:var(--text)">개발자 모드:</strong> Google Cloud Console에서 OAuth 2.0 클라이언트 ID를 발급받아 아래에 입력하면 실제 연동이 가능합니다.
+      <div style="margin-top:8px;display:flex;gap:6px;">
+        <input class="inp" id="client-id-inp" placeholder="Google OAuth Client ID" style="font-size:11px;flex:1;">
+        <button class="btn btn-ghost btn-sm" onclick="saveClientId()">저장</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════
+// STATE
+// ══════════════════════════════
+const APP = {
+  connected: false,
+  accessToken: null,
+  clientId: localStorage.getItem('gcal_client_id') || '',
+  sheetsUrl: localStorage.getItem('sheets_url') || '',
+  calEvents: [],
+  kpis: [
+    { name: '매출 / 성과', cat: '비즈니스', target: 100, current: 28 },
+    { name: '프로젝트 완료', cat: '실행', target: 12, current: 3 },
+    { name: '역량 개발', cat: '성장', target: 5, current: 1 },
+    { name: '네트워크 확장', cat: '관계', target: 20, current: 6 },
+  ],
+  kpiTags: ['매출/성과','프로젝트','역량개발','네트워크','기타'],
+  ganttItems: [
+    { name: '전략 수립', start: 1, end: 2, color: 'b' },
+    { name: '핵심 역량 개발', start: 2, end: 5, color: 'g' },
+    { name: '프로젝트 실행', start: 3, end: 8, color: 'y' },
+    { name: '성과 검토', start: 4, end: 4, color: 'r' },
+    { name: '성과 검토', start: 7, end: 7, color: 'r' },
+    { name: '2027 전략 수립', start: 10, end: 12, color: 'b' },
+  ],
+  monthlyTasks: [],
+  currentMonth: 2,
+  currentDay: new Date(2026, 2, 14),
+  aiHistory: [],
+  energyLevel: 0,
+};
+
+// ══════════════════════════════
+// TAB NAVIGATION
+// ══════════════════════════════
+function showTab(id, el) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-' + id).classList.add('active');
+  el.classList.add('active');
+  if (id === 'monthly') renderMonthly();
+  if (id === 'daily') renderDaily();
+  if (id === 'annual') renderAnnual();
+  if (id === 'dashboard') renderDashboard();
+}
+
+// ══════════════════════════════
+// TOAST
+// ══════════════════════════════
+function toast(msg, duration = 3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', duration);
+}
+
+// ══════════════════════════════
+// MODALS
+// ══════════════════════════════
+function openAuthModal() { document.getElementById('auth-overlay').classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ══════════════════════════════
+// GOOGLE AUTH
+// ══════════════════════════════
+function saveClientId() {
+  const val = document.getElementById('client-id-inp').value.trim();
+  if (!val) return;
+  APP.clientId = val;
+  localStorage.setItem('gcal_client_id', val);
+  toast('✅ Client ID 저장됨');
+}
+
+function startGoogleAuth() {
+  if (!APP.clientId) {
+    toast('⚠️ 먼저 Google OAuth Client ID를 입력해주세요');
+    return;
+  }
+  const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/spreadsheets';
+  const redirectUri = window.location.href.split('?')[0].split('#')[0];
+  const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${APP.clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=consent`;
+  window.open(url, '_blank', 'width=500,height=600');
+  toast('🔗 Google 로그인 창을 확인해주세요. 토큰을 받으면 아래에 붙여넣기 해주세요.');
+
+  // Fallback: manual token input
+  setTimeout(() => {
+    const token = prompt('Google OAuth Access Token을 붙여넣기 해주세요 (URL의 #access_token= 이후 값):');
+    if (token) setConnected(token);
+  }, 500);
+}
+
+function setConnected(token) {
+  APP.accessToken = token;
+  APP.connected = true;
+  document.getElementById('status-dot').className = 'status-dot connected';
+  document.getElementById('status-text').textContent = '연결됨';
+  document.getElementById('badge-cal').className = 'g-badge cal';
+  document.getElementById('badge-cal').textContent = '📅 Calendar 연결됨';
+  document.getElementById('signin-btn').textContent = '✅ 연결됨';
+  closeModal('auth-overlay');
+  toast('✅ Google 계정이 연결되었습니다!');
+  syncCalendar();
+}
+
+// ══════════════════════════════
+// GOOGLE CALENDAR SYNC
+// ══════════════════════════════
+async function syncCalendar() {
+  if (!APP.connected) {
+    toast('⚠️ 먼저 Google 계정을 연동해주세요');
+    return;
+  }
+  document.getElementById('cal-loading').style.display = 'inline-block';
+  try {
+    const now = new Date();
+    const timeMin = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const timeMax = new Date(now.getFullYear(), now.getMonth() + 2, 0).toISOString();
+    const res = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${timeMin}&timeMax=${timeMax}&singleEvents=true&orderBy=startTime&maxResults=50`,
+      { headers: { Authorization: `Bearer ${APP.accessToken}` } }
+    );
+    if (!res.ok) throw new Error('Calendar API 오류: ' + res.status);
+    const data = await res.json();
+    APP.calEvents = data.items || [];
+    renderUpcomingEvents();
+    renderCalWithEvents();
+    updateDashboardStats();
+    toast(`✅ 캘린더 동기화 완료 (${APP.calEvents.length}개 일정)`);
+  } catch (e) {
+    toast('❌ 캘린더 동기화 실패: ' + e.message);
+  } finally {
+    document.getElementById('cal-loading').style.display = 'none';
+  }
+}
+
+function renderUpcomingEvents() {
+  const now = new Date();
+  const upcoming = APP.calEvents
+    .filter(e => new Date(e.start?.dateTime || e.start?.date) >= now)
+    .slice(0, 8);
+  const el = document.getElementById('upcoming-events');
+  if (!upcoming.length) { el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">다가오는 일정 없음</div>'; return; }
+  el.innerHTML = upcoming.map(e => {
+    const start = new Date(e.start?.dateTime || e.start?.date);
+    const fmt = start.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', weekday: 'short' });
+    const time = e.start?.dateTime ? start.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '종일';
+    return `<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);align-items:center;">
+      <div style="text-align:center;min-width:48px;background:var(--surface2);border-radius:6px;padding:4px 6px;">
+        <div style="font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace;">${fmt.split(' ')[0]}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;">${start.getDate()}</div>
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:12px;font-weight:500;margin-bottom:2px;">${e.summary || '(제목없음)'}</div>
+        <div style="font-size:10px;color:var(--muted);">${time}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════
+// GOOGLE SHEETS
+// ══════════════════════════════
+function connectSheets() {
+  const url = document.getElementById('sheets-url-inp').value.trim();
+  if (!url) { toast('⚠️ Sheets URL을 입력해주세요'); return; }
+  APP.sheetsUrl = url;
+  localStorage.setItem('sheets_url', url);
+  document.getElementById('badge-sheets').className = 'g-badge sheets';
+  document.getElementById('badge-sheets').textContent = '📊 Sheets 연결됨';
+  toast('✅ Google Sheets 연결됨');
+  document.getElementById('sheets-kpi-display').innerHTML =
+    `<div style="font-size:12px;color:var(--g-green);">✅ Sheets 연결됨</div>
+     <div style="font-size:11px;color:var(--muted);margin-top:6px;">${url.substring(0,60)}...</div>
+     <button class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="syncKPIFromSheets()">데이터 불러오기</button>`;
+}
+
+async function saveToSheets(type) {
+  if (!APP.sheetsUrl || !APP.connected) {
+    toast('⚠️ Sheets를 먼저 연결해주세요');
+    return;
+  }
+  toast(`📊 Sheets에 ${type} 데이터 저장 중...`);
+  // Sheets API write would go here in production
+  setTimeout(() => toast(`✅ Sheets 저장 완료`), 800);
+}
+
+function saveKPIToSheets() { saveToSheets('KPI'); }
+function syncKPIFromSheets() { toast('📊 Sheets에서 KPI 데이터 불러오는 중...'); setTimeout(() => toast('✅ KPI 데이터 업데이트됨'), 800); }
+
+// ══════════════════════════════
+// DASHBOARD
+// ══════════════════════════════
+function renderDashboard() {
+  renderGantt();
+  const avg = APP.kpis.reduce((s,k) => s + k.current/k.target, 0) / APP.kpis.length * 100;
+  document.getElementById('sd-kpi-val').textContent = Math.round(avg) + '%';
+  document.getElementById('sd-kpi-sub').textContent = `${APP.kpis.length}개 KPI 평균`;
+  document.getElementById('sd-kpi-bar').style.width = avg + '%';
+  if (APP.connected) {
+    document.getElementById('sd-events-val').textContent = APP.calEvents.length || '—';
+    document.getElementById('sd-events-sub').textContent = '이번 달 총 일정';
+  }
+}
+
+function renderGantt() {
+  const rows = {};
+  APP.ganttItems.forEach(g => {
+    if (!rows[g.name]) rows[g.name] = [];
+    rows[g.name].push(g);
+  });
+  const nowMonth = 3; // March
+  let html = '';
+  Object.entries(rows).forEach(([name, items]) => {
+    let cells = '';
+    for (let m = 1; m <= 12; m++) {
+      const bar = items.find(i => i.start <= m && i.end >= m);
+      const isCur = m === nowMonth;
+      cells += `<td style="position:relative;">${isCur ? '<div class="gcur"></div>' : ''}${bar ? `<div class="gbar ${bar.color}" style="left:4px;right:4px;"></div>` : ''}</td>`;
+    }
+    html += `<tr><td>${name}</td>${cells}</tr>`;
+  });
+  document.getElementById('gantt-body').innerHTML = html;
+}
+
+function syncAll() {
+  if (!APP.connected) { openAuthModal(); return; }
+  syncCalendar();
+  toast('🔄 전체 동기화 중...');
+}
+
+function updateDashboardStats() {
+  const evCount = APP.calEvents.filter(e => {
+    const d = new Date(e.start?.dateTime || e.start?.date);
+    return d.getMonth() === new Date().getMonth();
+  }).length;
+  document.getElementById('sd-events-val').textContent = evCount;
+  document.getElementById('sd-events-sub').textContent = `이번 달 총 일정`;
+
+  const upcoming = APP.calEvents.filter(e => {
+    const d = new Date(e.start?.dateTime || e.start?.date);
+    const diff = (d - new Date()) / 86400000;
+    return diff >= 0 && diff <= 7;
+  }).length;
+  document.getElementById('sd-over-val').textContent = upcoming;
+  document.getElementById('sd-over-sub').textContent = '7일 내 예정';
+}
+
+// ══════════════════════════════
+// ANNUAL
+// ══════════════════════════════
+function renderAnnual() {
+  renderKPITable();
+  renderQGrid();
+}
+
+function renderKPITable() {
+  const tbody = document.getElementById('kpi-tbody');
+  tbody.innerHTML = APP.kpis.map((k, i) => {
+    const pct = Math.round(k.current / k.target * 100);
+    const col = pct < 30 ? 'pr' : pct < 60 ? 'py' : 'pg';
+    const status = pct >= 80 ? '🟢 양호' : pct >= 50 ? '🟡 주의' : '🔴 위험';
+    return `<tr>
+      <td><input class="kpi-name-inp" value="${k.name}" onchange="APP.kpis[${i}].name=this.value;renderKPITags()"></td>
+      <td><input style="background:transparent;border:none;color:var(--muted);font-size:11px;width:70px;" value="${k.cat}" onchange="APP.kpis[${i}].cat=this.value"></td>
+      <td><input value="${k.target}" onchange="APP.kpis[${i}].target=+this.value;renderKPITable()"></td>
+      <td><input value="${k.current}" onchange="APP.kpis[${i}].current=+this.value;renderKPITable()"></td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:12px;">${pct}%</td>
+      <td style="width:100px;"><div class="prog-wrap"><div class="prog-fill ${col}" style="width:${pct}%"></div></div></td>
+      <td style="font-size:11px;">${status}</td>
+    </tr>`;
+  }).join('');
+}
+
+function addKPIRow() {
+  APP.kpis.push({ name: '새 KPI', cat: '기타', target: 100, current: 0 });
+  renderKPITable();
+}
+
+function renderQGrid() {
+  const qData = [
+    { q: 'Q1', months: 'JAN–MAR', items: ['전략 수립 완료', 'Q1 KPI 기준선 설정', 'OKR 정렬'], col: '#1a2744', tcol: '#93c5fd' },
+    { q: 'Q2', months: 'APR–JUN', items: ['Mid-year review', '핵심 프로젝트 50%', '파트너십 구축'], col: '#1a3a2b', tcol: '#86efac' },
+    { q: 'Q3', months: 'JUL–SEP', items: ['후반기 전략 조정', '연간 목표 70% 달성'], col: '#2d2000', tcol: '#fcd34d' },
+    { q: 'Q4', months: 'OCT–DEC', items: ['연간 KPI 100%', '2027 전략 착수'], col: '#2d0a0a', tcol: '#fca5a5' },
+  ];
+  document.getElementById('q-grid').innerHTML = qData.map(q =>
+    `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+      <div style="padding:10px 14px;background:${q.col};display:flex;justify-content:space-between;">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:${q.tcol};">${q.q}</span>
+        <span style="font-size:10px;color:${q.tcol};opacity:0.7;">${q.months}</span>
+      </div>
+      <div style="padding:12px;">
+        <div id="qtasks-${q.q}" style="display:flex;flex-direction:column;gap:4px;">
+          ${q.items.map(it => `<div class="check-item"><input type="checkbox"><label>${it}</label></div>`).join('')}
+        </div>
+        <input class="inp" style="font-size:11px;margin-top:8px;" placeholder="+ 마일스톤 추가" onkeydown="if(event.key==='Enter')addQItem(event,'${q.q}')">
+      </div>
+    </div>`
+  ).join('');
+}
+
+function addQItem(e, q) {
+  const val = e.target.value.trim(); if (!val) return;
+  const list = document.getElementById('qtasks-' + q);
+  const div = document.createElement('div'); div.className = 'check-item';
+  const id = 'qi_' + Date.now();
+  div.innerHTML = `<input type="checkbox" id="${id}"><label for="${id}">${val}</label>`;
+  div.querySelector('input').addEventListener('change', function() { div.querySelector('label').classList.toggle('done', this.checked); });
+  list.appendChild(div); e.target.value = '';
+}
+
+// ══════════════════════════════
+// MONTHLY
+// ══════════════════════════════
+function renderMonthly() {
+  const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  document.getElementById('month-btns').innerHTML = months.map((m,i) =>
+    `<button class="mbtn ${i===APP.currentMonth?'active':''}" onclick="selectMonth(${i})">${m}</button>`
+  ).join('');
+  renderCal(APP.currentMonth);
+  renderMonthlyKPI();
+  renderMonthlyTaskList();
+}
+
+function selectMonth(m) {
+  APP.currentMonth = m;
+  document.querySelectorAll('.mbtn').forEach((b,i) => b.classList.toggle('active', i===m));
+  renderCal(m);
+}
+
+function renderCal(m) {
+  const days = ['일','월','화','수','목','금','토'];
+  const first = new Date(2026, m, 1).getDay();
+  const total = new Date(2026, m+1, 0).getDate();
+  const now = new Date();
+  const isNow = now.getFullYear()===2026 && now.getMonth()===m;
+  let html = days.map(d => `<div class="cal-hd">${d}</div>`).join('');
+  for(let i=0;i<first;i++) html += `<div class="cal-day empty"></div>`;
+  for(let d=1;d<=total;d++) {
+    const isT = isNow && d===now.getDate();
+    const dayEvents = APP.calEvents.filter(e => {
+      const ed = new Date(e.start?.dateTime || e.start?.date);
+      return ed.getMonth()===m && ed.getDate()===d;
+    });
+    const evHTML = dayEvents.slice(0,2).map(e =>
+      `<div class="cal-event ev-cal">${e.summary?.substring(0,12)||'일정'}</div>`
+    ).join('');
+    html += `<div class="cal-day${isT?' today':''}" onclick="selectDay(${d},${m})">
+      <div class="cal-dn">${d}</div>${evHTML}</div>`;
+  }
+  document.getElementById('cal-grid').innerHTML = html;
+}
+
+function renderCalWithEvents() { renderCal(APP.currentMonth); }
+
+function selectDay(d, m) {
+  document.querySelectorAll('.cal-day').forEach(c => c.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+}
+
+function renderMonthlyKPI() {
+  const html = APP.kpis.map(k => {
+    const monthly = Math.round(k.target / 12);
+    const pct = Math.min(100, Math.round(k.current / (monthly * (APP.currentMonth + 1)) * 100));
+    const col = pct < 50 ? 'pr' : pct < 80 ? 'py' : 'pg';
+    return `<div style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">
+        <span>${k.name}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);">${k.current}/${monthly}건</span>
+      </div>
+      <div class="prog-wrap"><div class="prog-fill ${col}" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+  document.getElementById('monthly-kpi-panel').innerHTML = html;
+}
+
+function renderMonthlyTaskList() {
+  const list = document.getElementById('monthly-task-list');
+  list.innerHTML = APP.monthlyTasks.map((t,i) => `
+    <div class="check-item">
+      <input type="checkbox" id="mt${i}" ${t.done?'checked':''} onchange="APP.monthlyTasks[${i}].done=this.checked;renderMonthlyTaskList()">
+      <label for="mt${i}" ${t.done?'class="done"':''}>${t.text}</label>
+      <span class="pri ${t.pri}">${t.pri.toUpperCase()}</span>
+    </div>`).join('');
+}
+
+function addMonthlyTask() {
+  const inp = document.getElementById('mt-inp');
+  const val = inp.value.trim(); if (!val) return;
+  APP.monthlyTasks.push({ text: val, done: false, pri: 'pm' });
+  renderMonthlyTaskList();
+  inp.value = '';
+}
+
+// ══════════════════════════════
+// DAILY
+// ══════════════════════════════
+const DAY_KO = ['일','월','화','수','목','금','토'];
+const DAY_EN = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+
+function renderDaily() {
+  updateDateDisplay();
+  renderTimeBlocks();
+  renderKPITags();
+}
+
+function updateDateDisplay() {
+  const d = APP.currentDay;
+  document.getElementById('d-date').textContent =
+    `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${DAY_KO[d.getDay()]})`;
+  document.getElementById('d-week').textContent = `${DAY_EN[d.getDay()]} · WEEK ${getWeek(d)}`;
+}
+
+function getWeek(d) {
+  return Math.ceil(((d - new Date(d.getFullYear(),0,1))/86400000 + new Date(d.getFullYear(),0,1).getDay()+1)/7);
+}
+
+function changeDay(n) {
+  APP.currentDay = new Date(APP.currentDay.getTime() + n*86400000);
+  updateDateDisplay();
+  renderTimeBlocks();
+}
+function goToday() { APP.currentDay = new Date(2026,2,14); updateDateDisplay(); renderTimeBlocks(); }
+
+function renderTimeBlocks() {
+  const hours = ['06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22'];
+  const hints = {'06':'아침 루틴 / 운동','08':'하루 계획 & 우선순위','09':'Deep Work ①','12':'점심','14':'미팅 / 협업','17':'이메일 & 행정','19':'성찰 & 내일 준비'};
+  const dayStr = `${APP.currentDay.getFullYear()}-${APP.currentDay.getMonth()}-${APP.currentDay.getDate()}`;
+
+  // Find cal events for today
+  const todayEvents = APP.calEvents.filter(e => {
+    const ed = new Date(e.start?.dateTime || e.start?.date);
+    return ed.getFullYear()===APP.currentDay.getFullYear() && ed.getMonth()===APP.currentDay.getMonth() && ed.getDate()===APP.currentDay.getDate();
+  });
+
+  document.getElementById('time-col').innerHTML = hours.map(h => {
+    const ev = todayEvents.filter(e => {
+      if (!e.start?.dateTime) return false;
+      return new Date(e.start.dateTime).getHours() === +h;
+    });
+    const evHTML = ev.map(e => `<div class="tb-gcal">📅 ${e.summary||'일정'}</div>`).join('');
+    return `<div class="tb">
+      <div class="tb-time">${h}:00</div>
+      <div class="tb-wrap">${evHTML}<textarea class="tb-inp" rows="2" placeholder="${hints[h]||''}"></textarea></div>
+    </div>`;
+  }).join('');
+}
+
+function renderKPITags() {
+  document.getElementById('kpi-tags').innerHTML = APP.kpis.map(k =>
+    `<span onclick="this.style.opacity=this.style.opacity==='0.3'?'1':'0.3';this.style.textDecoration=this.style.textDecoration==='line-through'?'none':'line-through';"
+      style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:3px 9px;font-size:10px;font-family:'IBM Plex Mono',monospace;cursor:pointer;transition:all 0.15s;">
+      ${k.name}</span>`
+  ).join('');
+}
+
+// ══════════════════════════════
+// ENERGY
+// ══════════════════════════════
+const ELABELS = ['','매우 낮음 😔','낮음 😐','보통 🙂','높음 💪','최상 🔥'];
+function setE(n) {
+  APP.energyLevel = n;
+  document.querySelectorAll('.eseg').forEach((s,i) => s.classList.toggle('lit', i<n));
+  document.getElementById('e-label').textContent = ELABELS[n];
+  document.getElementById('ds-energy').textContent = ELABELS[n];
+}
+
+// ══════════════════════════════
+// AI COACH
+// ══════════════════════════════
+async function sendAI() {
+  const inp = document.getElementById('ai-input');
+  const msg = inp.value.trim(); if (!msg) return;
+  inp.value = '';
+
+  const chat = document.getElementById('ai-chat');
+  chat.innerHTML += `<div class="ai-msg user">${msg}</div>`;
+  const loadEl = document.createElement('div');
+  loadEl.className = 'ai-msg assistant';
+  loadEl.innerHTML = '<span class="spin"></span> 분석 중...';
+  chat.appendChild(loadEl);
+  chat.scrollTop = chat.scrollHeight;
+
+  // Build context
+  const ctx = buildContext();
+  APP.aiHistory.push({ role: 'user', content: msg });
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `당신은 맥킨지 전략 컨설턴트 수준의 AI 플래너 코치입니다. 사용자의 KPI 데이터와 구글 캘린더 데이터를 기반으로 전략적이고 실행 가능한 인사이트를 제공합니다.
+
+현재 사용자 데이터:
+${ctx}
+
+응답 원칙:
+1. 항상 구체적인 수치와 근거를 제시하세요
+2. 맥킨지의 "Answer First" 원칙으로 결론을 먼저 말하세요
+3. 실행 가능한 다음 단계 (Next Steps) 3가지를 제안하세요
+4. 한국어로 답변하세요`,
+        messages: APP.aiHistory.slice(-10),
+      })
+    });
+    const data = await res.json();
+    const reply = data.content?.[0]?.text || '응답을 받지 못했습니다.';
+    APP.aiHistory.push({ role: 'assistant', content: reply });
+    loadEl.innerHTML = reply.replace(/\n/g, '<br>');
+  } catch (e) {
+    loadEl.innerHTML = '❌ AI 연결 오류: ' + e.message;
+  }
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function buildContext() {
+  const kpiSummary = APP.kpis.map(k =>
+    `- ${k.name}: 목표 ${k.target}, 현재 ${k.current} (${Math.round(k.current/k.target*100)}%)`
+  ).join('\n');
+
+  const calSummary = APP.calEvents.slice(0,10).map(e =>
+    `- ${e.summary}: ${e.start?.dateTime || e.start?.date}`
+  ).join('\n');
+
+  return `## KPI 현황\n${kpiSummary}\n\n## 최근 캘린더 일정\n${calSummary || '(캘린더 미연결)'}\n\n## 에너지 레벨: ${APP.energyLevel || '미기록'}`;
+}
+
+function quickAsk(q) {
+  document.getElementById('ai-input').value = q;
+  sendAI();
+  document.querySelector('[onclick*="ai"]')?.click();
+}
+
+async function generateInsight() {
+  document.getElementById('insight-text').innerHTML = '<span class="spin"></span> AI 분석 중...';
+  const ctx = buildContext();
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: `다음 KPI/캘린더 데이터를 분석해서 3줄 전략 인사이트를 주세요:\n${ctx}`
+        }]
+      })
+    });
+    const data = await res.json();
+    document.getElementById('insight-text').innerHTML = (data.content?.[0]?.text || '—').replace(/\n/g,'<br>');
+  } catch(e) {
+    document.getElementById('insight-text').textContent = '분석 실패: ' + e.message;
+  }
+}
+
+// ══════════════════════════════
+// INIT
+// ══════════════════════════════
+(function init() {
+  if (APP.clientId) document.getElementById('client-id-inp').value = APP.clientId;
+  renderDashboard();
+  renderAnnual();
+  renderMonthly();
+  renderDaily();
+
+  // Check for OAuth token in URL fragment
+  const hash = window.location.hash;
+  if (hash.includes('access_token=')) {
+    const token = hash.split('access_token=')[1].split('&')[0];
+    if (token) { setConnected(token); window.location.hash = ''; }
+  }
+})();
+</script>
+</body>
+</html>

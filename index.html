@@ -178,7 +178,7 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.7;}
 .tb-inp::placeholder{color:#CBD5E0;font-size:11px;}
 
 /* ── MATRIX ── */
-.matrix{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:8px;overflow:hidden;height:210px;}
+.matrix{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:8px;overflow:hidden;min-height:220px;}
 .mc{background:var(--white);padding:10px;display:flex;flex-direction:column;}
 .mc-lbl{font-size:9px;font-family:'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;font-weight:600;}
 .mc-lbl.r{color:var(--danger);} .mc-lbl.b{color:var(--point);} .mc-lbl.y{color:var(--warning);} .mc-lbl.m{color:var(--muted);}
@@ -468,7 +468,7 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.7;}
       <table class="kpi-tbl">
         <thead><tr>
           <th>KPI 지표명</th><th>카테고리</th><th>연간 목표</th><th>현재값</th>
-          <th>달성률</th><th>진행</th><th>상태</th><th>우선순위</th>
+          <th>달성률</th><th>진행</th><th>상태</th><th>우선순위</th><th></th>
         </tr></thead>
         <tbody id="kpi-tbody"></tbody>
       </table>
@@ -558,10 +558,10 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.7;}
       <div style="margin-bottom:12px;">
         <div style="font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-bottom:6px;">EISENHOWER MATRIX — 우선순위</div>
         <div class="matrix">
-          <div class="mc"><div class="mc-lbl r">① DO NOW — 긴급 & 중요</div><div class="mc-tasks"><input class="mc-inp" placeholder="즉시 처리..."><input class="mc-inp" placeholder="즉시 처리..."><input class="mc-inp" placeholder="즉시 처리..."></div></div>
-          <div class="mc"><div class="mc-lbl b">② SCHEDULE — 중요, 비긴급</div><div class="mc-tasks"><input class="mc-inp" placeholder="일정 잡기..."><input class="mc-inp" placeholder="일정 잡기..."><input class="mc-inp" placeholder="일정 잡기..."></div></div>
-          <div class="mc"><div class="mc-lbl y">③ DELEGATE — 긴급, 덜 중요</div><div class="mc-tasks"><input class="mc-inp" placeholder="위임/최소화..."><input class="mc-inp" placeholder="위임/최소화..."></div></div>
-          <div class="mc"><div class="mc-lbl m">④ ELIMINATE — 비긴급, 덜 중요</div><div class="mc-tasks"><input class="mc-inp" placeholder="제거/나중에..."><input class="mc-inp" placeholder="제거/나중에..."></div></div>
+          <div class="mc"><div class="mc-lbl r">① DO NOW — 긴급 & 중요</div><div class="mc-tasks" id="eisen-q1"></div></div>
+          <div class="mc"><div class="mc-lbl b">② SCHEDULE — 중요, 비긴급</div><div class="mc-tasks" id="eisen-q2"></div></div>
+          <div class="mc"><div class="mc-lbl y">③ DELEGATE — 긴급, 덜 중요</div><div class="mc-tasks" id="eisen-q3"></div></div>
+          <div class="mc"><div class="mc-lbl m">④ ELIMINATE — 비긴급, 덜 중요</div><div class="mc-tasks" id="eisen-q4"></div></div>
         </div>
       </div>
 
@@ -737,12 +737,19 @@ const S = {
   sheetsConnected: false,
   calEvents: [],
   kpis: [
-    {name:'매출 / 성과', cat:'비즈니스', target:100, current:0},
-    {name:'프로젝트 완료', cat:'실행', target:12, current:0},
-    {name:'역량 개발', cat:'성장', target:5, current:0},
-    {name:'네트워크 확장', cat:'관계', target:20, current:0},
-    {name:'건강 / 웰빙', cat:'라이프', target:80, current:0},
+    {name:'매출 / 성과', cat:'비즈니스', target:100, current:0, priority:'HIGH'},
+    {name:'프로젝트 완료', cat:'실행', target:12, current:0, priority:'HIGH'},
+    {name:'역량 개발', cat:'성장', target:5, current:0, priority:'MED'},
+    {name:'네트워크 확장', cat:'관계', target:20, current:0, priority:'MED'},
+    {name:'건강 / 웰빙', cat:'라이프', target:80, current:0, priority:'LOW'},
   ],
+  qTasks: {
+    Q1: [{text:'전략 수립 완료',done:false},{text:'Q1 KPI 기준선 설정',done:false},{text:'OKR 정렬',done:false}],
+    Q2: [{text:'Mid-year review',done:false},{text:'핵심 프로젝트 50%',done:false},{text:'파트너십 구축',done:false}],
+    Q3: [{text:'후반기 전략 조정',done:false},{text:'연간 목표 70% 달성',done:false}],
+    Q4: [{text:'연간 KPI 100%',done:false},{text:'2027 전략 착수',done:false}],
+  },
+  dailyData: {},
   gantt: [
     {name:'전략 수립', s:1, e:2, c:'#3182CE'},
     {name:'핵심 역량 개발', s:2, e:5, c:'#38A169'},
@@ -775,7 +782,11 @@ const S = {
 
 function loadFromStorage(){
   const kpi = localStorage.getItem('kpi_data');
-  if(kpi) S.kpis = JSON.parse(kpi);
+  if(kpi) S.kpis = JSON.parse(kpi).map(k=>({priority:'MED',...k}));
+  const qt = localStorage.getItem('q_tasks');
+  if(qt) S.qTasks = JSON.parse(qt);
+  const dd = localStorage.getItem('daily_data');
+  if(dd) S.dailyData = JSON.parse(dd);
   const wtp = localStorage.getItem('wtp'); if(wtp) document.getElementById('wtp').value=wtp;
   const htw = localStorage.getItem('htw'); if(htw) document.getElementById('htw').value=htw;
   const mhc = localStorage.getItem('mhc'); if(mhc) document.getElementById('mhc').value=mhc;
@@ -786,11 +797,13 @@ function loadFromStorage(){
 
 // Auto-save
 setInterval(()=>{
-  localStorage.setItem('kpi_data', JSON.stringify(S.kpis));
+  saveKPIData();
   const w=document.getElementById('wtp'); if(w) localStorage.setItem('wtp',w.value);
   const h=document.getElementById('htw'); if(h) localStorage.setItem('htw',h.value);
   const m=document.getElementById('mhc'); if(m) localStorage.setItem('mhc',m.value);
   localStorage.setItem('monthly_tasks', JSON.stringify(S.monthlyTasks));
+  saveQTasks();
+  saveDailyData();
 }, 3000);
 
 // ══════════════════════════════════════
@@ -1073,33 +1086,61 @@ function renderAnnual(){ renderKPITable(); renderQGrid(); }
 function renderKPITable(){
   document.getElementById('kpi-tbody').innerHTML = S.kpis.map((k,i)=>{
     const pct = k.target>0 ? Math.min(100,Math.round(k.current/k.target*100)) : 0;
-    const col = pct>=80?'pgreen':pct>=50?'pyellow':'pred';
     const status = pct>=80?'🟢 ON TRACK':pct>=50?'🟡 CAUTION':'🔴 AT RISK';
     const bar = `${'█'.repeat(Math.round(pct/10))}${'░'.repeat(10-Math.round(pct/10))}`;
+    const pri = k.priority||'MED';
+    const priColor = pri==='HIGH'?'var(--danger)':pri==='MED'?'var(--warning)':'var(--success)';
     return `<tr>
-      <td><input class="kpi-name-inp" value="${k.name}" placeholder="KPI 지표명" onchange="S.kpis[${i}].name=this.value;renderDashKPI();renderKPITags()"></td>
-      <td style="color:var(--muted);font-size:11px;">${k.cat}</td>
-      <td style="text-align:right;"><input class="kpi-num-inp" value="${k.target}" onchange="S.kpis[${i}].target=+this.value;renderKPITable();updateDashKPIStats()"></td>
-      <td style="text-align:right;"><input class="kpi-num-inp" value="${k.current}" onchange="S.kpis[${i}].current=+this.value;renderKPITable();updateDashKPIStats()" style="color:var(--point);font-weight:600;"></td>
+      <td><input class="kpi-name-inp" value="${k.name.replace(/"/g,'&quot;')}" placeholder="KPI 지표명"
+        oninput="S.kpis[${i}].name=this.value;"
+        onblur="renderDashKPI();renderKPITags();saveKPIData()"></td>
+      <td><input class="kpi-name-inp" value="${k.cat.replace(/"/g,'&quot;')}" placeholder="카테고리"
+        style="width:80px;font-size:11px;color:var(--muted);"
+        oninput="S.kpis[${i}].cat=this.value;"
+        onblur="saveKPIData()"></td>
+      <td style="text-align:right;"><input class="kpi-num-inp" value="${k.target}"
+        onchange="S.kpis[${i}].target=+this.value;renderKPITable();updateDashKPIStats()"></td>
+      <td style="text-align:right;"><input class="kpi-num-inp" value="${k.current}"
+        onchange="S.kpis[${i}].current=+this.value;renderKPITable();updateDashKPIStats()"
+        style="color:var(--point);font-weight:600;"></td>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:${pct>=80?'var(--success)':pct>=50?'var(--warning)':'var(--danger)'};">${pct}%</td>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--point);">${bar}</td>
       <td style="font-size:11px;">${status}</td>
-      <td style="font-size:11px;color:var(--muted);">${i<2?'🔴 HIGH':i<4?'🟡 MED':'🟢 LOW'}</td>
+      <td>
+        <select style="font-size:10px;border:1px solid var(--border);border-radius:4px;padding:2px 6px;background:var(--bg);color:${priColor};font-family:'IBM Plex Mono',monospace;cursor:pointer;font-weight:600;"
+          onchange="S.kpis[${i}].priority=this.value;renderKPITable();saveKPIData()">
+          <option value="HIGH" ${pri==='HIGH'?'selected':''}>🔴 HIGH</option>
+          <option value="MED" ${pri==='MED'?'selected':''}>🟡 MED</option>
+          <option value="LOW" ${pri==='LOW'?'selected':''}>🟢 LOW</option>
+        </select>
+      </td>
+      <td><button onclick="deleteKPI(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:0 4px;" title="삭제">✕</button></td>
     </tr>`;
   }).join('');
 }
 
+function saveKPIData(){
+  localStorage.setItem('kpi_data', JSON.stringify(S.kpis));
+}
+
+function deleteKPI(i){
+  if(!confirm('이 KPI를 삭제하시겠습니까?')) return;
+  S.kpis.splice(i,1);
+  renderKPITable(); renderDashKPI(); renderKPITags(); updateDashKPIStats();
+  saveKPIData();
+}
+
 function addKPI(){
-  S.kpis.push({name:'새 KPI',cat:'기타',target:100,current:0});
+  S.kpis.push({name:'새 KPI', cat:'기타', target:100, current:0, priority:'MED'});
   renderKPITable(); renderKPITags();
 }
 
 function renderQGrid(){
   const qd=[
-    {q:'Q1',m:'JAN–MAR',items:['전략 수립 완료','Q1 KPI 기준선 설정','OKR 정렬'],c:['#3182CE','white']},
-    {q:'Q2',m:'APR–JUN',items:['Mid-year review','핵심 프로젝트 50%','파트너십 구축'],c:['#38A169','white']},
-    {q:'Q3',m:'JUL–SEP',items:['후반기 전략 조정','연간 목표 70% 달성'],c:['#DD6B20','white']},
-    {q:'Q4',m:'OCT–DEC',items:['연간 KPI 100%','2027 전략 착수'],c:['#E53E3E','white']},
+    {q:'Q1',m:'JAN–MAR',c:['#3182CE','white']},
+    {q:'Q2',m:'APR–JUN',c:['#38A169','white']},
+    {q:'Q3',m:'JUL–SEP',c:['#DD6B20','white']},
+    {q:'Q4',m:'OCT–DEC',c:['#E53E3E','white']},
   ];
   document.getElementById('q-grid').innerHTML = qd.map(q=>`
     <div class="q-card">
@@ -1108,26 +1149,42 @@ function renderQGrid(){
         <span style="color:${q.c[1]};">${q.m}</span>
       </div>
       <div class="q-body">
-        <div id="qtasks-${q.q}">
-          ${q.items.map((it,i)=>{
-            const id=`qt_${q.q}_${i}`;
-            return `<div class="q-task"><input type="checkbox" id="${id}" onchange="document.getElementById('qt_txt_${q.q}_${i}').classList.toggle('done',this.checked)"><span class="q-task-text" id="qt_txt_${q.q}_${i}">${it}</span></div>`;
-          }).join('')}
-        </div>
-        <input class="q-add" placeholder="+ 마일스톤 추가" onkeydown="addQItem(event,'${q.q}','${q.c[0]}')">
+        <div id="qtasks-${q.q}">${renderQTasks(q.q)}</div>
+        <input class="q-add" placeholder="+ 마일스톤 추가" onkeydown="addQItem(event,'${q.q}')">
       </div>
     </div>
   `).join('');
 }
 
-function addQItem(e,q,col){
-  if(e.key!=='Enter') return;
-  const val=e.target.value.trim(); if(!val) return;
-  const list=document.getElementById('qtasks-'+q);
-  const id='qt_'+Date.now();
-  const div=document.createElement('div'); div.className='q-task';
-  div.innerHTML=`<input type="checkbox" id="${id}" onchange="document.getElementById('t${id}').classList.toggle('done',this.checked)"><span class="q-task-text" id="t${id}">${val}</span>`;
-  list.appendChild(div); e.target.value='';
+function renderQTasks(q){
+  return (S.qTasks[q]||[]).map((t,i)=>`
+    <div class="q-task">
+      <input type="checkbox" ${t.done?'checked':''} onchange="S.qTasks['${q}'][${i}].done=this.checked;saveQTasks()">
+      <span class="q-task-text ${t.done?'done':''}">${t.text}</span>
+      <button onclick="deleteQTask('${q}',${i})" style="background:none;border:none;color:#CBD5E0;cursor:pointer;font-size:13px;padding:0 4px;margin-left:auto;line-height:1;" title="삭제">✕</button>
+    </div>
+  `).join('');
+}
+
+function addQItem(e, q){
+  if(e.isComposing || e.keyCode === 229) return;
+  if(e.key !== 'Enter') return;
+  const val = e.target.value.trim(); if(!val) return;
+  if(!S.qTasks[q]) S.qTasks[q] = [];
+  S.qTasks[q].push({text:val, done:false});
+  document.getElementById('qtasks-'+q).innerHTML = renderQTasks(q);
+  e.target.value = '';
+  saveQTasks();
+}
+
+function deleteQTask(q, i){
+  S.qTasks[q].splice(i, 1);
+  document.getElementById('qtasks-'+q).innerHTML = renderQTasks(q);
+  saveQTasks();
+}
+
+function saveQTasks(){
+  localStorage.setItem('q_tasks', JSON.stringify(S.qTasks));
 }
 
 // ══════════════════════════════════════
@@ -1212,7 +1269,32 @@ function addMonthlyTask(){
 const DAYS_KO=['일','월','화','수','목','금','토'];
 const DAYS_EN=['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
 
-function renderDaily(){ updateDateDisplay(); renderTimeBlocks(); renderKPITags(); }
+function getDayKey(d){
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function saveDailyData(){
+  const key = getDayKey(S.currentDay);
+  if(!S.dailyData[key]) S.dailyData[key] = {};
+  const d = S.dailyData[key];
+  const ot = document.getElementById('one-thing'); if(ot) d.oneThing = ot.value;
+  d.energy = S.energy;
+  ['r-win','r-learn','r-next','r-grat'].forEach(id=>{ const el=document.getElementById(id); if(el) d[id]=el.value; });
+  ['note-ans','note-ev','note-next'].forEach(id=>{ const el=document.getElementById(id); if(el) d[id]=el.value; });
+  localStorage.setItem('daily_data', JSON.stringify(S.dailyData));
+}
+
+function loadDailyData(){
+  const key = getDayKey(S.currentDay);
+  const d = S.dailyData[key] || {};
+  const ot = document.getElementById('one-thing'); if(ot) ot.value = d.oneThing||'';
+  if(d.energy){ S.energy=d.energy; setE(S.energy); }
+  else { S.energy=0; document.querySelectorAll('.eseg').forEach(s=>s.classList.remove('lit')); document.getElementById('e-lbl').textContent='클릭해서 기록'; }
+  ['r-win','r-learn','r-next','r-grat'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=d[id]||''; });
+  ['note-ans','note-ev','note-next'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=d[id]||''; });
+}
+
+function renderDaily(){ updateDateDisplay(); renderTimeBlocks(); renderKPITags(); renderEisenhower(); loadDailyData(); }
 
 function updateDateDisplay(){
   const d=S.currentDay;
@@ -1224,12 +1306,14 @@ function getWeek(d){
   return Math.ceil(((d-new Date(d.getFullYear(),0,1))/86400000+new Date(d.getFullYear(),0,1).getDay()+1)/7);
 }
 
-function changeDay(n){ S.currentDay=new Date(S.currentDay.getTime()+n*86400000); updateDateDisplay(); renderTimeBlocks(); }
-function goToday(){ S.currentDay=new Date(2026,2,14); updateDateDisplay(); renderTimeBlocks(); }
+function changeDay(n){ saveDailyData(); S.currentDay=new Date(S.currentDay.getTime()+n*86400000); updateDateDisplay(); renderTimeBlocks(); renderEisenhower(); loadDailyData(); }
+function goToday(){ saveDailyData(); S.currentDay=new Date(2026,2,14); updateDateDisplay(); renderTimeBlocks(); renderEisenhower(); loadDailyData(); }
 
 function renderTimeBlocks(){
   const hours=['06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22'];
   const hints={'06':'아침 루틴 / 운동','08':'하루 계획 & 우선순위','09':'Deep Work ①','12':'점심','14':'미팅 / 협업','17':'이메일 & 행정','19':'성찰 & 내일 준비'};
+  const key = getDayKey(S.currentDay);
+  const savedTB = S.dailyData[key]?.timeblocks || {};
   const todayEvs = S.calEvents.filter(e=>{
     const ed=new Date(e.start?.dateTime||e.start?.date);
     return ed.getFullYear()===S.currentDay.getFullYear()&&ed.getMonth()===S.currentDay.getMonth()&&ed.getDate()===S.currentDay.getDate();
@@ -1240,11 +1324,19 @@ function renderTimeBlocks(){
       return new Date(e.start.dateTime).getHours()===+h;
     });
     const evHTML=evs.map(e=>`<div class="tb-ev">📅 ${e.summary||'일정'}</div>`).join('');
+    const saved = (savedTB[h]||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     return `<div class="tb">
       <div class="tb-t">${h}:00</div>
-      <div class="tb-wrap">${evHTML}<textarea class="tb-inp" rows="2" placeholder="${hints[h]||''}"></textarea></div>
+      <div class="tb-wrap">${evHTML}<textarea class="tb-inp" rows="2" data-hour="${h}" placeholder="${hints[h]||''}" oninput="saveTBInput(this,'${h}')">${saved}</textarea></div>
     </div>`;
   }).join('');
+}
+
+function saveTBInput(el, hour){
+  const key = getDayKey(S.currentDay);
+  if(!S.dailyData[key]) S.dailyData[key] = {};
+  if(!S.dailyData[key].timeblocks) S.dailyData[key].timeblocks = {};
+  S.dailyData[key].timeblocks[hour] = el.value;
 }
 
 function renderKPITags(){
@@ -1306,6 +1398,55 @@ function buildContext(){
 }
 
 function quickAsk(q){ document.getElementById('ai-inp').value=q; sendAI(); showTab('ai',document.querySelector('.nav-btn:nth-child(5)')); }
+
+// ══════════════════════════════════════
+// EISENHOWER MATRIX (dynamic)
+// ══════════════════════════════════════
+function renderEisenhower(){
+  const key = getDayKey(S.currentDay);
+  if(!S.dailyData[key]) S.dailyData[key] = {};
+  if(!S.dailyData[key].eisenhower) S.dailyData[key].eisenhower = {q1:[],q2:[],q3:[],q4:[]};
+  const ei = S.dailyData[key].eisenhower;
+  ['q1','q2','q3','q4'].forEach(q=>{
+    const el = document.getElementById('eisen-'+q); if(!el) return;
+    const ph = {q1:'즉시 처리...',q2:'일정 잡기...',q3:'위임/최소화...',q4:'제거/나중에...'};
+    el.innerHTML = (ei[q]||[]).map((t,i)=>`
+      <div style="display:flex;align-items:center;gap:4px;margin-bottom:3px;">
+        <input type="checkbox" ${t.done?'checked':''} onchange="toggleEisenTask('${q}',${i},this.checked)" style="accent-color:var(--point);flex-shrink:0;cursor:pointer;">
+        <span style="flex:1;font-size:11px;font-family:'Sora',sans-serif;${t.done?'text-decoration:line-through;color:var(--muted);':''}">${t.text}</span>
+        <button onclick="delEisenTask('${q}',${i})" style="background:none;border:none;color:#CBD5E0;cursor:pointer;font-size:13px;padding:0 2px;line-height:1;" title="삭제">✕</button>
+      </div>
+    `).join('') + `<input class="mc-inp" placeholder="${ph[q]}"
+      onkeydown="addEisenTask(event,'${q}')" style="margin-top:2px;">`;
+  });
+}
+
+function addEisenTask(e, q){
+  if(e.isComposing || e.keyCode === 229) return;
+  if(e.key !== 'Enter') return;
+  const text = e.target.value.trim(); if(!text) return;
+  const key = getDayKey(S.currentDay);
+  if(!S.dailyData[key]) S.dailyData[key] = {};
+  if(!S.dailyData[key].eisenhower) S.dailyData[key].eisenhower = {q1:[],q2:[],q3:[],q4:[]};
+  S.dailyData[key].eisenhower[q].push({text, done:false});
+  e.target.value = '';
+  renderEisenhower();
+  saveDailyData();
+}
+
+function delEisenTask(q, i){
+  const key = getDayKey(S.currentDay);
+  S.dailyData[key].eisenhower[q].splice(i, 1);
+  renderEisenhower();
+  saveDailyData();
+}
+
+function toggleEisenTask(q, i, done){
+  const key = getDayKey(S.currentDay);
+  S.dailyData[key].eisenhower[q][i].done = done;
+  renderEisenhower();
+  saveDailyData();
+}
 </script>
 </body>
 </html>

@@ -475,6 +475,24 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.7;}
     </div>
   </div>
 
+  <!-- KPI 연계 달성 과제 -->
+  <div class="card mb16">
+    <div class="card-head">
+      <span class="card-title">✅ KPI 달성 과제 — 체크율로 성과도 자동 반영</span>
+      <div class="flex gap8 items-center">
+        <select id="kpi-task-select" style="font-size:11px;border:1px solid var(--border);border-radius:5px;padding:4px 10px;background:var(--bg);color:var(--text);outline:none;cursor:pointer;" onchange="renderKPITasksPanel()">
+          <option value="">KPI 선택...</option>
+        </select>
+      </div>
+    </div>
+    <div class="card-body" id="kpi-tasks-panel">
+      <div style="font-size:12px;color:var(--muted);text-align:center;padding:20px;">
+        KPI를 선택하면 관련 달성 과제를 추가할 수 있습니다<br>
+        <span style="font-size:11px;">과제를 체크할수록 KPI 달성률이 자동으로 올라갑니다 📈</span>
+      </div>
+    </div>
+  </div>
+
   <!-- Q Grid -->
   <div class="sh"><div class="sh-lbl">Quarterly Plan</div><div class="sh-line"></div></div>
   <div class="g4" id="q-grid"></div>
@@ -606,10 +624,10 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.7;}
           <svg width="72" height="72" viewBox="0 0 72 72">
             <circle cx="36" cy="36" r="28" fill="none" stroke="#EDF2F7" stroke-width="7"/>
             <circle cx="36" cy="36" r="28" fill="none" stroke="var(--success)" stroke-width="7"
-              stroke-dasharray="175.9" stroke-dashoffset="53" stroke-linecap="round" transform="rotate(-90 36 36)" id="ring"/>
-            <text x="36" y="40" text-anchor="middle" font-size="13" font-weight="700" fill="var(--main)" font-family="'IBM Plex Mono',monospace" id="ring-pct">70%</text>
+              stroke-dasharray="175.9" stroke-dashoffset="175.9" stroke-linecap="round" transform="rotate(-90 36 36)" id="ring"/>
+            <text x="36" y="40" text-anchor="middle" font-size="13" font-weight="700" fill="var(--main)" font-family="'IBM Plex Mono',monospace" id="ring-pct">0%</text>
           </svg>
-          <div style="font-size:11px;color:var(--muted);margin-top:6px;" id="ring-detail">계획 10건 중 7건</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;" id="ring-detail">할일을 추가해보세요</div>
         </div>
       </div>
 
@@ -632,6 +650,19 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.7;}
         <div class="card-body">
           <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">오늘 한 일이 기여한 KPI:</div>
           <div style="display:flex;flex-wrap:wrap;gap:5px;" id="kpi-tags"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">📷 오늘의 사진</span>
+          <label style="cursor:pointer;">
+            <input type="file" accept="image/*" multiple style="display:none;" onchange="addPhotos(this)">
+            <span class="btn btn-ghost btn-sm">+ 사진</span>
+          </label>
+        </div>
+        <div class="card-body" id="photo-grid" style="display:flex;flex-wrap:wrap;gap:6px;min-height:44px;">
+          <div style="font-size:11px;color:var(--muted);">사진을 추가해보세요</div>
         </div>
       </div>
     </div>
@@ -737,11 +768,11 @@ const S = {
   sheetsConnected: false,
   calEvents: [],
   kpis: [
-    {name:'매출 / 성과', cat:'비즈니스', target:100, current:0, priority:'HIGH'},
-    {name:'프로젝트 완료', cat:'실행', target:12, current:0, priority:'HIGH'},
-    {name:'역량 개발', cat:'성장', target:5, current:0, priority:'MED'},
-    {name:'네트워크 확장', cat:'관계', target:20, current:0, priority:'MED'},
-    {name:'건강 / 웰빙', cat:'라이프', target:80, current:0, priority:'LOW'},
+    {name:'매출 / 성과', cat:'비즈니스', target:100, current:0, priority:'HIGH', tasks:[]},
+    {name:'프로젝트 완료', cat:'실행', target:12, current:0, priority:'HIGH', tasks:[]},
+    {name:'역량 개발', cat:'성장', target:5, current:0, priority:'MED', tasks:[]},
+    {name:'네트워크 확장', cat:'관계', target:20, current:0, priority:'MED', tasks:[]},
+    {name:'건강 / 웰빙', cat:'라이프', target:80, current:0, priority:'LOW', tasks:[]},
   ],
   qTasks: {
     Q1: [{text:'전략 수립 완료',done:false},{text:'Q1 KPI 기준선 설정',done:false},{text:'OKR 정렬',done:false}],
@@ -782,7 +813,7 @@ const S = {
 
 function loadFromStorage(){
   const kpi = localStorage.getItem('kpi_data');
-  if(kpi) S.kpis = JSON.parse(kpi).map(k=>({priority:'MED',...k}));
+  if(kpi) S.kpis = JSON.parse(kpi).map(k=>({priority:'MED', tasks:[], ...k}));
   const qt = localStorage.getItem('q_tasks');
   if(qt) S.qTasks = JSON.parse(qt);
   const dd = localStorage.getItem('daily_data');
@@ -1081,7 +1112,7 @@ function renderGantt(){
 // ══════════════════════════════════════
 // ANNUAL
 // ══════════════════════════════════════
-function renderAnnual(){ renderKPITable(); renderQGrid(); }
+function renderAnnual(){ renderKPITable(); renderKPITaskSelect(); renderQGrid(); }
 
 function renderKPITable(){
   document.getElementById('kpi-tbody').innerHTML = S.kpis.map((k,i)=>{
@@ -1292,9 +1323,11 @@ function loadDailyData(){
   else { S.energy=0; document.querySelectorAll('.eseg').forEach(s=>s.classList.remove('lit')); document.getElementById('e-lbl').textContent='클릭해서 기록'; }
   ['r-win','r-learn','r-next','r-grat'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=d[id]||''; });
   ['note-ans','note-ev','note-next'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=d[id]||''; });
+  updateCompletionRing();
+  renderPhotos();
 }
 
-function renderDaily(){ updateDateDisplay(); renderTimeBlocks(); renderKPITags(); renderEisenhower(); loadDailyData(); }
+function renderDaily(){ updateDateDisplay(); renderTimeBlocks(); renderKPITags(); renderEisenhower(); loadDailyData(); updateCompletionRing(); renderPhotos(); }
 
 function updateDateDisplay(){
   const d=S.currentDay;
@@ -1416,9 +1449,13 @@ function renderEisenhower(){
         <span style="flex:1;font-size:11px;font-family:'Sora',sans-serif;${t.done?'text-decoration:line-through;color:var(--muted);':''}">${t.text}</span>
         <button onclick="delEisenTask('${q}',${i})" style="background:none;border:none;color:#CBD5E0;cursor:pointer;font-size:13px;padding:0 2px;line-height:1;" title="삭제">✕</button>
       </div>
-    `).join('') + `<input class="mc-inp" placeholder="${ph[q]}"
-      onkeydown="addEisenTask(event,'${q}')" style="margin-top:2px;">`;
+    `).join('') + `<div style="display:flex;gap:4px;margin-top:4px;">
+      <input class="mc-inp" id="ei-inp-${q}" placeholder="${ph[q]}"
+        onkeydown="addEisenTask(event,'${q}')" style="flex:1;">
+      <button onclick="addEisenTaskBtn('${q}')" style="background:var(--point);color:white;border:none;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:14px;flex-shrink:0;line-height:1;">+</button>
+    </div>`;
   });
+  updateCompletionRing();
 }
 
 function addEisenTask(e, q){
@@ -1446,6 +1483,193 @@ function toggleEisenTask(q, i, done){
   S.dailyData[key].eisenhower[q][i].done = done;
   renderEisenhower();
   saveDailyData();
+}
+
+function addEisenTaskBtn(q){
+  const el = document.getElementById('ei-inp-'+q); if(!el) return;
+  const text = el.value.trim(); if(!text) return;
+  const key = getDayKey(S.currentDay);
+  if(!S.dailyData[key]) S.dailyData[key] = {};
+  if(!S.dailyData[key].eisenhower) S.dailyData[key].eisenhower = {q1:[],q2:[],q3:[],q4:[]};
+  S.dailyData[key].eisenhower[q].push({text, done:false});
+  el.value = '';
+  renderEisenhower();
+  saveDailyData();
+}
+
+// ══════════════════════════════════════
+// COMPLETION RING
+// ══════════════════════════════════════
+function updateCompletionRing(){
+  const key = getDayKey(S.currentDay);
+  const ei = S.dailyData[key]?.eisenhower || {q1:[],q2:[],q3:[],q4:[]};
+  const all = [...(ei.q1||[]),...(ei.q2||[]),...(ei.q3||[]),...(ei.q4||[])];
+  const total = all.length;
+  const done = all.filter(t=>t.done).length;
+  const pct = total > 0 ? Math.round(done/total*100) : 0;
+  const offset = (175.9 * (1 - pct/100)).toFixed(1);
+  const ring = document.getElementById('ring');
+  const ringPct = document.getElementById('ring-pct');
+  const ringDetail = document.getElementById('ring-detail');
+  if(ring) ring.setAttribute('stroke-dashoffset', offset);
+  if(ringPct) ringPct.textContent = pct + '%';
+  if(ringDetail) ringDetail.textContent = total > 0 ? `계획 ${total}건 중 ${done}건` : '할일을 추가해보세요';
+}
+
+// ══════════════════════════════════════
+// KPI TASKS (연계 달성 과제)
+// ══════════════════════════════════════
+function renderKPITaskSelect(){
+  const sel = document.getElementById('kpi-task-select'); if(!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">KPI 선택...</option>' +
+    S.kpis.filter(k=>k.name).map((k,i)=>`<option value="${i}" ${cur==i?'selected':''}>${k.name}</option>`).join('');
+  if(cur !== '') renderKPITasksPanel();
+}
+
+function renderKPITasksPanel(){
+  const sel = document.getElementById('kpi-task-select');
+  const panel = document.getElementById('kpi-tasks-panel'); if(!panel) return;
+  const idx = sel?.value;
+  if(!idx && idx !== 0){
+    panel.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:20px;">KPI를 선택하면 관련 달성 과제를 추가할 수 있습니다<br><span style="font-size:11px;">과제를 체크할수록 KPI 달성률이 자동으로 올라갑니다 📈</span></div>';
+    return;
+  }
+  const i = parseInt(idx);
+  const k = S.kpis[i]; if(!k) return;
+  if(!k.tasks) k.tasks = [];
+  const done = k.tasks.filter(t=>t.done).length;
+  const total = k.tasks.length;
+  const pct = total > 0 ? Math.round(done/total*100) : 0;
+  const barCol = pct>=80?'var(--success)':pct>=50?'var(--warning)':'var(--danger)';
+  panel.innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);">
+      <div style="flex:1;">
+        <div style="font-size:14px;font-weight:600;color:var(--main);margin-bottom:3px;">${k.name}</div>
+        <div style="font-size:11px;color:var(--muted);">목표: <b>${k.target}</b> · 현재: <b style="color:var(--point);">${k.current}</b> · 달성률: <b style="color:${barCol};">${pct}%</b></div>
+        <div class="prog" style="margin-top:5px;"><div class="prog-fill" style="width:${pct}%;background:${barCol};transition:width .4s;"></div></div>
+      </div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;color:${barCol};min-width:48px;text-align:right;">${done}/${total}</div>
+    </div>
+    <div id="kpi-task-list">
+      ${k.tasks.length ? k.tasks.map((t,ti)=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px dashed var(--border);">
+          <input type="checkbox" ${t.done?'checked':''} onchange="toggleKPITask(${i},${ti},this.checked)" style="accent-color:var(--point);cursor:pointer;flex-shrink:0;">
+          <span style="flex:1;font-size:12px;${t.done?'text-decoration:line-through;color:var(--muted);':''}">${t.text}</span>
+          <button onclick="deleteKPITask(${i},${ti})" style="background:none;border:none;color:#CBD5E0;cursor:pointer;font-size:14px;padding:0 4px;" title="삭제">✕</button>
+        </div>
+      `).join('') : '<div style="font-size:12px;color:var(--muted);padding:8px 0;">아직 달성 과제가 없습니다. 아래에서 추가해보세요.</div>'}
+    </div>
+    <div style="display:flex;gap:6px;margin-top:12px;">
+      <input class="inp" id="kpi-task-inp" placeholder="달성 과제 추가... (Enter 또는 + 버튼)" style="font-size:11px;" onkeydown="addKPITask(event,${i})">
+      <button class="btn btn-primary btn-sm" onclick="addKPITaskBtn(${i})">+</button>
+    </div>
+    ${total > 0 ? '<div style="font-size:10px;color:var(--muted);margin-top:8px;text-align:center;">체크 완료 시 KPI 현재값이 자동으로 업데이트됩니다</div>' : ''}
+  `;
+}
+
+function addKPITask(e, kpiIdx){
+  if(e.isComposing || e.keyCode === 229) return;
+  if(e.key !== 'Enter') return;
+  _doAddKPITask(kpiIdx);
+}
+function addKPITaskBtn(kpiIdx){ _doAddKPITask(kpiIdx); }
+function _doAddKPITask(kpiIdx){
+  const inp = document.getElementById('kpi-task-inp');
+  const text = inp?.value.trim(); if(!text) return;
+  if(!S.kpis[kpiIdx].tasks) S.kpis[kpiIdx].tasks = [];
+  S.kpis[kpiIdx].tasks.push({text, done:false});
+  inp.value = '';
+  updateKPIFromTasks(kpiIdx);
+  renderKPITasksPanel();
+  saveKPIData();
+}
+
+function toggleKPITask(kpiIdx, taskIdx, done){
+  S.kpis[kpiIdx].tasks[taskIdx].done = done;
+  updateKPIFromTasks(kpiIdx);
+  renderKPITasksPanel();
+  renderKPITable();
+  saveKPIData();
+}
+
+function deleteKPITask(kpiIdx, taskIdx){
+  S.kpis[kpiIdx].tasks.splice(taskIdx, 1);
+  updateKPIFromTasks(kpiIdx);
+  renderKPITasksPanel();
+  renderKPITable();
+  saveKPIData();
+}
+
+function updateKPIFromTasks(kpiIdx){
+  const k = S.kpis[kpiIdx]; if(!k || !k.tasks || k.tasks.length === 0) return;
+  const done = k.tasks.filter(t=>t.done).length;
+  k.current = Math.round(k.target * done / k.tasks.length);
+  updateDashKPIStats();
+  renderDashKPI();
+}
+
+// ══════════════════════════════════════
+// PHOTOS
+// ══════════════════════════════════════
+function addPhotos(input){
+  const key = getDayKey(S.currentDay);
+  if(!S.dailyData[key]) S.dailyData[key] = {};
+  if(!S.dailyData[key].photos) S.dailyData[key].photos = [];
+  Array.from(input.files).forEach(file=>{
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = ()=>{
+      const canvas = document.createElement('canvas');
+      const max = 800;
+      let w = img.width, h = img.height;
+      if(w > max || h > max){ if(w>h){h=Math.round(h*max/w);w=max;}else{w=Math.round(w*max/h);h=max;} }
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      S.dailyData[key].photos.push(canvas.toDataURL('image/jpeg',0.8));
+      URL.revokeObjectURL(url);
+      renderPhotos();
+      saveDailyData();
+    };
+    img.src = url;
+  });
+  input.value = '';
+}
+
+function renderPhotos(){
+  const key = getDayKey(S.currentDay);
+  const photos = S.dailyData[key]?.photos || [];
+  const el = document.getElementById('photo-grid'); if(!el) return;
+  if(!photos.length){
+    el.innerHTML = '<div style="font-size:11px;color:var(--muted);">사진을 추가해보세요</div>';
+    return;
+  }
+  el.innerHTML = photos.map((src,i)=>`
+    <div style="position:relative;width:76px;height:76px;">
+      <img src="${src}" style="width:76px;height:76px;object-fit:cover;border-radius:6px;cursor:pointer;display:block;" onclick="viewPhoto(${i})">
+      <button onclick="deletePhoto(${i})" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.65);color:white;border:none;border-radius:50%;width:17px;height:17px;font-size:10px;cursor:pointer;line-height:17px;padding:0;text-align:center;">✕</button>
+    </div>
+  `).join('');
+}
+
+function deletePhoto(i){
+  const key = getDayKey(S.currentDay);
+  if(S.dailyData[key]?.photos) S.dailyData[key].photos.splice(i,1);
+  renderPhotos();
+  saveDailyData();
+}
+
+function viewPhoto(i){
+  const key = getDayKey(S.currentDay);
+  const src = S.dailyData[key]?.photos?.[i]; if(!src) return;
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:1000;display:flex;align-items:center;justify-content:center;cursor:pointer;';
+  ov.onclick = ()=>ov.remove();
+  const img = document.createElement('img');
+  img.src = src;
+  img.style.cssText = 'max-width:92vw;max-height:92vh;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.5);';
+  ov.appendChild(img);
+  document.body.appendChild(ov);
 }
 </script>
 </body>

@@ -166,29 +166,30 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.7;}
 
 /* ── TIME BLOCKS ── */
 .tb{display:flex;gap:8px;min-height:50px;border-bottom:1px solid var(--border);padding:4px 0;align-items:flex-start;}
-.tb-t{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);width:40px;flex-shrink:0;padding-top:6px;}
+.tb-t{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--sub);font-weight:600;width:42px;flex-shrink:0;padding-top:8px;}
 .tb-wrap{flex:1;}
 .tb-ev{font-size:10px;padding:2px 8px;border-radius:3px;background:#EBF8FF;color:#2B6CB0;margin-bottom:3px;display:flex;align-items:center;gap:4px;}
 .tb-inp{
-  width:100%;background:transparent;border:none;border-bottom:1px dashed transparent;
-  padding:3px 4px;font-size:12px;font-family:'Sora',sans-serif;color:var(--text);
-  outline:none;min-height:38px;resize:none;line-height:1.5;
+  width:100%;background:#F8FAFF;border:1px solid var(--border);border-radius:5px;
+  padding:5px 8px;font-size:12px;font-family:'Sora',sans-serif;color:var(--text);
+  outline:none;min-height:36px;resize:none;line-height:1.5;
 }
-.tb-inp:focus{border-bottom-color:var(--point);background:var(--bg);border-radius:4px 4px 0 0;}
-.tb-inp::placeholder{color:#CBD5E0;font-size:11px;}
+.tb-inp:focus{border-color:var(--point);background:var(--white);box-shadow:0 0 0 2px rgba(49,130,206,.1);}
+.tb-inp::placeholder{color:#A0AEC0;font-size:11px;}
 
 /* ── MATRIX ── */
-.matrix{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:8px;overflow:hidden;min-height:220px;}
-.mc{background:var(--white);padding:10px;display:flex;flex-direction:column;}
-.mc-lbl{font-size:9px;font-family:'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;font-weight:600;}
+.matrix{display:grid;grid-template-columns:1fr 1fr;gap:8px;border-radius:8px;min-height:260px;}
+.mc{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:10px;display:flex;flex-direction:column;min-height:120px;}
+.mc-lbl{font-size:9px;font-family:'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;font-weight:600;}
 .mc-lbl.r{color:var(--danger);} .mc-lbl.b{color:var(--point);} .mc-lbl.y{color:var(--warning);} .mc-lbl.m{color:var(--muted);}
-.mc-tasks{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:3px;}
+.mc-tasks{flex:1;display:flex;flex-direction:column;gap:3px;min-height:30px;}
 .mc-inp{
-  background:transparent;border:none;border-bottom:1px dashed var(--border);
-  font-size:11px;font-family:'Sora',sans-serif;color:var(--text);padding:2px;outline:none;width:100%;
+  background:#F8FAFF;border:1px solid var(--border);border-radius:4px;
+  font-size:11px;font-family:'Sora',sans-serif;color:var(--text);
+  padding:4px 8px;outline:none;width:100%;
 }
-.mc-inp:focus{border-bottom-color:var(--point);}
-.mc-inp::placeholder{color:#CBD5E0;}
+.mc-inp:focus{border-color:var(--point);background:var(--white);box-shadow:0 0 0 2px rgba(49,130,206,.1);}
+.mc-inp::placeholder{color:#A0AEC0;}
 
 /* ── REFLECTION ── */
 .refl-q{font-size:10px;color:var(--muted);font-style:italic;margin-bottom:3px;}
@@ -576,10 +577,38 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.7;}
       <div style="margin-bottom:12px;">
         <div style="font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-bottom:6px;">EISENHOWER MATRIX — 우선순위</div>
         <div class="matrix">
-          <div class="mc"><div class="mc-lbl r">① DO NOW — 긴급 & 중요</div><div class="mc-tasks" id="eisen-q1"></div></div>
-          <div class="mc"><div class="mc-lbl b">② SCHEDULE — 중요, 비긴급</div><div class="mc-tasks" id="eisen-q2"></div></div>
-          <div class="mc"><div class="mc-lbl y">③ DELEGATE — 긴급, 덜 중요</div><div class="mc-tasks" id="eisen-q3"></div></div>
-          <div class="mc"><div class="mc-lbl m">④ ELIMINATE — 비긴급, 덜 중요</div><div class="mc-tasks" id="eisen-q4"></div></div>
+          <div class="mc">
+            <div class="mc-lbl r">① DO NOW — 긴급 &amp; 중요</div>
+            <div class="mc-tasks" id="eisen-q1"></div>
+            <div style="display:flex;gap:4px;margin-top:6px;">
+              <input class="mc-inp" id="ei-inp-q1" placeholder="즉시 처리할 일... (Enter)" onkeydown="addEisenTask(event,'q1')">
+              <button onclick="addEisenTaskBtn('q1')" style="background:var(--danger);color:white;border:none;border-radius:4px;padding:3px 9px;cursor:pointer;font-size:14px;flex-shrink:0;">+</button>
+            </div>
+          </div>
+          <div class="mc">
+            <div class="mc-lbl b">② SCHEDULE — 중요, 비긴급</div>
+            <div class="mc-tasks" id="eisen-q2"></div>
+            <div style="display:flex;gap:4px;margin-top:6px;">
+              <input class="mc-inp" id="ei-inp-q2" placeholder="일정 잡을 일... (Enter)" onkeydown="addEisenTask(event,'q2')">
+              <button onclick="addEisenTaskBtn('q2')" style="background:var(--point);color:white;border:none;border-radius:4px;padding:3px 9px;cursor:pointer;font-size:14px;flex-shrink:0;">+</button>
+            </div>
+          </div>
+          <div class="mc">
+            <div class="mc-lbl y">③ DELEGATE — 긴급, 덜 중요</div>
+            <div class="mc-tasks" id="eisen-q3"></div>
+            <div style="display:flex;gap:4px;margin-top:6px;">
+              <input class="mc-inp" id="ei-inp-q3" placeholder="위임할 일... (Enter)" onkeydown="addEisenTask(event,'q3')">
+              <button onclick="addEisenTaskBtn('q3')" style="background:var(--warning);color:white;border:none;border-radius:4px;padding:3px 9px;cursor:pointer;font-size:14px;flex-shrink:0;">+</button>
+            </div>
+          </div>
+          <div class="mc">
+            <div class="mc-lbl m">④ ELIMINATE — 비긴급, 덜 중요</div>
+            <div class="mc-tasks" id="eisen-q4"></div>
+            <div style="display:flex;gap:4px;margin-top:6px;">
+              <input class="mc-inp" id="ei-inp-q4" placeholder="제거/나중에... (Enter)" onkeydown="addEisenTask(event,'q4')">
+              <button onclick="addEisenTaskBtn('q4')" style="background:var(--muted);color:white;border:none;border-radius:4px;padding:3px 9px;cursor:pointer;font-size:14px;flex-shrink:0;">+</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1444,16 +1473,12 @@ function renderEisenhower(){
     const el = document.getElementById('eisen-'+q); if(!el) return;
     const ph = {q1:'즉시 처리...',q2:'일정 잡기...',q3:'위임/최소화...',q4:'제거/나중에...'};
     el.innerHTML = (ei[q]||[]).map((t,i)=>`
-      <div style="display:flex;align-items:center;gap:4px;margin-bottom:3px;">
-        <input type="checkbox" ${t.done?'checked':''} onchange="toggleEisenTask('${q}',${i},this.checked)" style="accent-color:var(--point);flex-shrink:0;cursor:pointer;">
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 6px;margin-bottom:2px;background:var(--bg);border-radius:5px;">
+        <input type="checkbox" ${t.done?'checked':''} onchange="toggleEisenTask('${q}',${i},this.checked)" style="accent-color:var(--point);flex-shrink:0;cursor:pointer;width:14px;height:14px;">
         <span style="flex:1;font-size:11px;font-family:'Sora',sans-serif;${t.done?'text-decoration:line-through;color:var(--muted);':''}">${t.text}</span>
-        <button onclick="delEisenTask('${q}',${i})" style="background:none;border:none;color:#CBD5E0;cursor:pointer;font-size:13px;padding:0 2px;line-height:1;" title="삭제">✕</button>
+        <button onclick="delEisenTask('${q}',${i})" style="background:none;border:none;color:#CBD5E0;cursor:pointer;font-size:12px;padding:0;line-height:1;" title="삭제">✕</button>
       </div>
-    `).join('') + `<div style="display:flex;gap:4px;margin-top:4px;">
-      <input class="mc-inp" id="ei-inp-${q}" placeholder="${ph[q]}"
-        onkeydown="addEisenTask(event,'${q}')" style="flex:1;">
-      <button onclick="addEisenTaskBtn('${q}')" style="background:var(--point);color:white;border:none;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:14px;flex-shrink:0;line-height:1;">+</button>
-    </div>`;
+    `).join('');
   });
   updateCompletionRing();
 }
@@ -1461,6 +1486,7 @@ function renderEisenhower(){
 function addEisenTask(e, q){
   if(e.isComposing || e.keyCode === 229) return;
   if(e.key !== 'Enter') return;
+  e.preventDefault();
   const text = e.target.value.trim(); if(!text) return;
   const key = getDayKey(S.currentDay);
   if(!S.dailyData[key]) S.dailyData[key] = {};

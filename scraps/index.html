@@ -8,11 +8,11 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="스크랩 정리">
+<meta name="apple-mobile-web-app-title" content="스크랩정리">
 <meta name="description" content="쌓여만 가는 스크린샷을 글자 인식으로 자동 분류하고, 하루 10장씩 정리하게 만드는 개인용 정리함. 모든 데이터는 이 기기 안에만 저장됩니다.">
 <title>스크랩 정리함</title>
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <style>
 :root{
@@ -212,6 +212,14 @@ body[data-view=triage] .toast{bottom:calc(var(--tab-h) + var(--safe-b) + 96px);}
       <div class="row between">
         <div><h2 style="margin:0">중복 의심</h2><div class="small muted" id="dup-sub"></div></div>
         <button class="btn sm danger" id="btn-dup">한 번에 삭제</button>
+      </div>
+    </div>
+
+    <div class="card hidden" id="install-card">
+      <div class="row between">
+        <div class="row" style="gap:12px"><img src="icon-192.png" alt="" width="44" height="44" style="border-radius:11px">
+          <div><h2 style="margin:0">홈 화면에 앱으로 설치</h2><div class="small muted" id="install-sub">아이콘을 눌러 바로 열 수 있습니다</div></div></div>
+        <button class="btn sm primary" id="btn-install">설치</button>
       </div>
     </div>
 
@@ -1007,6 +1015,28 @@ document.addEventListener('drop', e => { e.preventDefault(); if (e.dataTransfer.
   renderAll();
   if (S.items.some(i => i.ocr === 'pending')) runOCR();
 })();
+// 설치 안내: 안드로이드(크롬)는 설치 버튼, 아이폰(사파리)은 방법 안내
+(() => {
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  if (standalone) return;
+  const card = $('#install-card'), btn = $('#btn-install');
+  let deferred = null;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; card.classList.remove('hidden'); });
+  window.addEventListener('appinstalled', () => { card.classList.add('hidden'); toast('설치 완료! 홈 화면의 아이콘으로 여세요'); });
+  btn.onclick = async () => {
+    if (deferred) { deferred.prompt(); await deferred.userChoice; deferred = null; card.classList.add('hidden'); return; }
+    sheet(`<h3 style="margin-bottom:10px">아이폰에 설치하기</h3>
+      <ol class="small" style="padding-left:18px;margin:0;line-height:1.9">
+        <li><b>사파리</b>로 이 페이지를 엽니다 (크롬·카톡 브라우저는 안 됨)</li>
+        <li>아래쪽 <b>공유 버튼</b>(□↑)을 누릅니다</li>
+        <li><b>홈 화면에 추가</b>를 누르고 <b>추가</b>를 누릅니다</li>
+      </ol>`);
+  };
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (ios) { $('#install-sub').textContent = '공유 → 홈 화면에 추가'; btn.textContent = '방법 보기'; card.classList.remove('hidden'); }
+})();
+// 홈 화면 설치(앱 아이콘)용 서비스워커
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 </script>
 </body>
 </html>
